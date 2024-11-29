@@ -106,6 +106,41 @@ def get_HISfrac(array_xvgs):
 
     return prot_frac
 
+def get_HISprotfrac_ts(coordids, ANALYSIS_DIR):
+
+    """Read Histidines XVG and return statistics on total protonation fraction"""
+    xvg_dict = {}
+
+    lista_prot = [] #Keep track of protonation
+    lista_deprot = [] #Keep track of deprotonation
+
+    for coordid in coordids:
+        xvg_dict[coordid] = []
+        xvg_dict[coordid] = read_coordxvg(coordid, ANALYSIS_DIR) #Each directory has a list of the three lambda state
+        
+    for i in range(len(xvg_dict[coordids[0]])):
+        #print(i)
+
+        #If state1 > 0.8 count as protonated
+        if xvg_dict[coordids[0]][i,1] > 0.8:
+            lista_prot.append(1)
+            lista_deprot.append(0)
+            #print(xvg_dict[coordids[0]][i,1])
+        #If lambda > 0.8 count as deprotonated
+        elif (xvg_dict[coordids[1]][i,1] > 0.8) or (xvg_dict[coordids[2]][i,1] > 0.8):
+            lista_prot.append(0)
+            lista_deprot.append(1)
+        #If lambda > 0.8 count as deprotonated
+        else:
+            lista_prot.append(0)
+            lista_deprot.append(0)
+
+    #Cumlative sum along time
+    protcumsum_array = np.cumsum(lista_prot)
+    deprotcumsum_array = np.cumsum(lista_deprot)
+
+    return protcumsum_array/(protcumsum_array + deprotcumsum_array)
+
 def coord2lambdaid(lambdareference):
     """Read lambda reference file and return a dictionary with coordid as keys and lambdaid as values"""
 
