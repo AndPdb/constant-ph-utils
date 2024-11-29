@@ -106,29 +106,28 @@ def get_HISfrac(array_xvgs):
 
     return prot_frac
 
-#Corrd id to lambda id
 def coord2lambdaid(lambdareference):
     """Read lambda reference file and return a dictionary with coordid as keys and lambdaid as values"""
-    
-    coord2lambda = {}
+
+    coord2lambda_dict = {}
 
     with open(lambdareference, "r") as fi:
-        
+
         lambdaid = 0
         coordid = 0
-        
+
         for line in fi.readlines():
-            
             if line.startswith("resname"):
                 continue
-            
+
             elif line[5] != "1":
                 lambdaid = lambdaid
                 coordid += 1
-            
+
             else:
                 lambdaid +=1
                 coordid +=1
 
-        coord2lambda[coordid] = lambdaid
-    return coord2lambda
+
+            coord2lambda_dict[coordid] = lambdaid
+    return coord2lambda_dict
