@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from refactored_analyses import *
+from analyses import *
 
 def plot_lambda_hist(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, rows=20, cols=5):
     """Plot histogram of lambda values"""
