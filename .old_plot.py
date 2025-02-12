@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from refactored_analyses import *
+from analyses import *
 
 def plot_lambda_hist(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, rows=20, cols=5):
     """Plot histogram of lambda values"""
@@ -24,7 +24,7 @@ def plot_lambda_hist(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, rows=20, cols
 
             if index < lambda_ref.shape[0]:
                 ax = axes[i, j]
-                data = read_coord_xvg(str(coordid), PATH_ANALYSIS)
+                data = read_coordxvg(str(coordid), PATH_ANALYSIS)
                 ax.hist(data[:,1], bins=1000);
 
                 ax.set_xlim(-0.125,1.125)
@@ -67,14 +67,14 @@ def plot_protonation_timeseries(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, ro
                                 
                             coordids = [coordid, coordid+1, coordid+2]
                             
-                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS)
+                            res_prot_ts = get_HISprotfrac_ts(coordids, PATH_ANALYSIS)
 
                             prv_resid = lambda_ref.iloc[index]['resid'] 
                         else:
-                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS)
+                            res_prot_ts = get_HISprotfrac_ts(coordids, PATH_ANALYSIS)
 
                 else:
-                    res_prot_ts = get_protonation_timeseries(coordid, PATH_ANALYSIS)
+                    res_prot_ts = get_protfrac_ts(coordid, PATH_ANALYSIS)
 
                 ax.plot(res_prot_ts, label="MD1")
                 ax.set_ylim(-0.1,1.1)
@@ -120,16 +120,16 @@ def plot_protonation_convergence(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, r
                                 
                             coordids = [coordid, coordid+1, coordid+2]
                             
-                            res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[0])
-                            res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[1])
+                            res_prot_ts1 = get_HISprotfrac_ts(coordids, PATH_ANALYSIS[0])
+                            res_prot_ts2 = get_HISprotfrac_ts(coordids, PATH_ANALYSIS[1])
 
                             prv_resid = lambda_ref.iloc[index]['resid'] 
                         else:
-                            res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[0])
-                            res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[1])
+                            res_prot_ts1 = get_HISprotfrac_ts(coordids, PATH_ANALYSIS[0])
+                            res_prot_ts2 = get_HISprotfrac_ts(coordids, PATH_ANALYSIS[1])
                 else:
-                    res_prot_ts1 = get_protonation_timeseries(coordid, PATH_ANALYSIS[0])
-                    res_prot_ts2 = get_protonation_timeseries(coordid, PATH_ANALYSIS[1])
+                    res_prot_ts1 = get_protfrac_ts(coordid, PATH_ANALYSIS[0])
+                    res_prot_ts2 = get_protfrac_ts(coordid, PATH_ANALYSIS[1])
                 
                 min_length = min(len(res_prot_ts1), len(res_prot_ts2))
                 total_protarray = np.vstack((res_prot_ts1[:min_length], res_prot_ts2[:min_length]))
@@ -181,14 +181,14 @@ def plot_protonation_fraction(PATH_ANALYSIS, lambda_ref, rows=20, cols=5):
                                 
                             coordids = [coordid, coordid+1, coordid+2]
                             
-                            proton_avg, proton_se = get_histidine_statistics(coordids, PATH_ANALYSIS)
+                            proton_avg, proton_se = get_HISstats(coordids, PATH_ANALYSIS)
 
                             prv_resid = lambda_ref.iloc[index]['resid'] 
                         else:
-                            proton_avg, proton_se = get_histidine_statistics(coordids, PATH_ANALYSIS)
+                            proton_avg, proton_se = get_HISstats(coordids, PATH_ANALYSIS)
 
                 else:
-                    proton_avg, deproton_avg, proton_se, deproton_se  = get_statistics(str(coordid), PATH_ANALYSIS)
+                    proton_avg, deproton_avg, proton_se, deproton_se  = get_stats(str(coordid), PATH_ANALYSIS)
 
 
                 ax.bar(['Protonated'], [proton_avg], yerr=proton_se)
@@ -209,9 +209,9 @@ def plot_protonation_fraction(PATH_ANALYSIS, lambda_ref, rows=20, cols=5):
     return plt
 
 def single_residue_convergence(coordid, PATH_ANALYSIS, lambda_ref, title="Constant-pH MD"):
-    """THIS WORKS ONLY FOR NON HISTIDINES! Plot convergence of single residue. Just two replicas supported - add res_fracX if more."""
-    res_frac1 = get_protonation_timeseries(coordid, PATH_ANALYSIS[0])
-    res_frac2 = get_protonation_timeseries(coordid, PATH_ANALYSIS[1])
+    """Plot convergence of single residue. Just two replicas supported - add res_fracX if more."""
+    res_frac1 = get_protfrac_ts(coordid, PATH_ANALYSIS[0])
+    res_frac2 = get_protfrac_ts(coordid, PATH_ANALYSIS[1])
 
     min_length = min(len(res_frac1), len(res_frac2))
 
