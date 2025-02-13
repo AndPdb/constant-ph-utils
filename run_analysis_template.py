@@ -17,6 +17,8 @@ coord2lambda_dict = parse_lambda_reference('test/lambdareference.dat')
 PATH_MD1 = "test/MD1/analysis"
 PATH_MD2 = "test/MD1_2/analysis"
 PATHS_MD = [PATH_MD1, PATH_MD2]
+MD1_PREFIX = "MD1"
+MD2_PREFIX = "MD1_2"
 
 # # MD1
 
@@ -56,7 +58,7 @@ for i in range(rows):
 
 # Show the plot
 #plt.show()
-plt.savefig("MD1_histograms.png")
+plt.savefig(f"{MD1_PREFIX}_histograms.png")
 plt.close()
 
 # ## Protonation fraction time series
@@ -109,7 +111,7 @@ for i in range(rows):
 
 # Show the plot
 #plt.show()
-plt.savefig("MD1_timeseries.png")
+plt.savefig(f"{MD1_PREFIX}_timeseries.png")
 plt.close()
 
 # # MD1_3
@@ -150,7 +152,7 @@ for i in range(rows):
 
 # Show the plot
 #plt.show()
-plt.savefig("MD1_3_histograms.png")
+plt.savefig(f"{MD2_PREFIX}_histograms.png")
 plt.close()
 
 # ## Protonation fraction time series
@@ -202,7 +204,7 @@ for i in range(rows):
 
 # Show the plot
 #plt.show()
-plt.savefig("MD1_3_timeseries.png")
+plt.savefig(f"{MD2_PREFIX}_timeseries.png")
 plt.close()
 
 # MD1 vs MD1_3
@@ -261,7 +263,7 @@ for i in range(rows):
 
 # Show the plot
 #plt.show()
-plt.savefig("MD1_MD1_3_convergence.png")
+plt.savefig(f"{MD1_PREFIX}_{MD2_PREFIX}_convergence.png")
 plt.close()
 
 
@@ -322,7 +324,7 @@ for i in range(rows):
 
 # Show the plot
 #plt.show()
-plt.savefig("MD1_MD1_3_protonfraction.png")
+plt.savefig(f"{MD1_PREFIX}_{MD2_PREFIX}_protonfraction.png")
 plt.close()
 
 # ## Sigle residue protonation fraction time series
