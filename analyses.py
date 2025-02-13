@@ -2,6 +2,22 @@ import numpy as np
 import os
 from typing import Dict, Tuple, List
 
+def fast_read_numpy_array(filename, num_rows=2000000):
+    data = np.empty((num_rows, 2), dtype=np.float64)  # Preallocate array
+    index = 0  # Keep track of valid data row index
+
+    with open(filename, 'r') as f:
+        for line in f:
+            if line[0] in ('#', '@'):  # Skip comments
+                continue
+            values = line.split()
+            data[index, 0] = float(values[0])
+            data[index, 1] = float(values[1])
+            index += 1
+            if index >= num_rows:  # Prevent overflow
+                break
+    
+    return data[:index, :]
 
 def read_coord_xvg(coord_id: int, analysis_dir: str) -> np.ndarray:
     """
@@ -12,7 +28,7 @@ def read_coord_xvg(coord_id: int, analysis_dir: str) -> np.ndarray:
     coord_xvg_name = f"cphmd-coord-{coord_id}.xvg"
     coord_xvg_path = os.path.join(analysis_dir, coord_xvg_name)
     # Load data from the file, skipping comment lines
-    return np.loadtxt(coord_xvg_path, comments=["@", "#"])
+    return fast_read_numpy_array(coord_xvg_path)
 
 
 def calculate_fractions(array_xvg: np.ndarray) -> Tuple[float, float]:
