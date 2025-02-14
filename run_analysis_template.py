@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 def main():
-    lambda_ref = pd.read_csv('test/lambdareference.dat', sep='\s+')
+    lambda_ref = pd.read_csv('test/lambdareference.dat', sep=r'\s+', engine='python')
 
     coord2lambda_dict = parse_lambda_reference('test/lambdareference.dat')
 
@@ -23,6 +23,9 @@ def main():
     PATHS_MD = [PATH_MD1, PATH_MD2]
     MD1_PREFIX = "MD1"
     MD2_PREFIX = "MD1_2"
+
+    # Create an instance of XVGData for the directories
+    xvg_data = XVGData(PATHS_MD)
 
     # # MD1
 
@@ -49,8 +52,8 @@ def main():
 
             if index < lambda_ref.shape[0]:
                 ax = axes[i, j]
-                data = read_coord_xvg(str(coordid), PATH_MD1)
-                ax.hist(data[:,1], bins=1000);
+                data = xvg_data.get_coord_xvg(coordid, PATH_MD1)
+                ax.hist(data[:,1], bins=500);
 
                 ax.set_xlim(-0.125,1.125)
                 ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
@@ -95,14 +98,14 @@ def main():
                                 
                             coordids = [coordid, coordid+1, coordid+2]
                             
-                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_MD1)
+                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_MD1, xvg_data)
 
                             prv_resid = lambda_ref.iloc[index]['resid'] 
                         else:
-                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_MD1)
+                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_MD1, xvg_data)
 
                 else:
-                    res_prot_ts = get_protonation_timeseries(coordid, PATH_MD1)
+                    res_prot_ts = get_protonation_timeseries(coordid, PATH_MD1, xvg_data)
 
                 ax.plot(res_prot_ts, label="MD1")
                 ax.set_ylim(-0.1,1.1)
@@ -143,8 +146,8 @@ def main():
 
             if index < lambda_ref.shape[0]:
                 ax = axes[i, j]
-                data = read_coord_xvg(str(coordid), PATH_MD2)
-                ax.hist(data[:,1], bins=1000);
+                data = xvg_data.get_coord_xvg(coordid, PATH_MD2)
+                ax.hist(data[:,1], bins=500);
                 
                 ax.set_xlim(-0.125,1.125)
                 ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
@@ -188,14 +191,14 @@ def main():
                                 
                             coordids = [coordid, coordid+1, coordid+2]
                             
-                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_MD2)
+                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_MD2, xvg_data)
 
                             prv_resid = lambda_ref.iloc[index]['resid'] 
                         else:
-                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_MD2)
+                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_MD2, xvg_data)
 
                 else:
-                    res_prot_ts = get_protonation_timeseries(coordid, PATH_MD2)
+                    res_prot_ts = get_protonation_timeseries(coordid, PATH_MD2, xvg_data)
 
                 ax.plot(res_prot_ts, label="MD1_3")
                 ax.set_ylim(-0.1,1.1)
@@ -241,16 +244,16 @@ def main():
                                 
                             coordids = [coordid, coordid+1, coordid+2]
                             
-                            res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATHS_MD[0])
-                            res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATHS_MD[1])
+                            res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATHS_MD[0], xvg_data)
+                            res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATHS_MD[1], xvg_data)
 
                             prv_resid = lambda_ref.iloc[index]['resid'] 
                         else:
-                            res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATHS_MD[0])
-                            res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATHS_MD[1])
+                            res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATHS_MD[0], xvg_data)
+                            res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATHS_MD[1], xvg_data)
                 else:
-                    res_prot_ts1 = get_protonation_timeseries(coordid, PATHS_MD[0])
-                    res_prot_ts2 = get_protonation_timeseries(coordid, PATHS_MD[1])
+                    res_prot_ts1 = get_protonation_timeseries(coordid, PATHS_MD[0], xvg_data)
+                    res_prot_ts2 = get_protonation_timeseries(coordid, PATHS_MD[1], xvg_data)
                 
                 min_length = min(len(res_prot_ts1), len(res_prot_ts2))
                 total_protarray = np.vstack((res_prot_ts1[:min_length], res_prot_ts2[:min_length]))
@@ -302,14 +305,14 @@ def main():
                                 
                             coordids = [coordid, coordid+1, coordid+2]
                             
-                            proton_avg, proton_se = get_histidine_statistics(coordids, PATHS_MD)
+                            proton_avg, proton_se = get_histidine_statistics(coordids, xvg_data)
 
                             prv_resid = lambda_ref.iloc[index]['resid'] 
                         else:
-                            proton_avg, proton_se = get_histidine_statistics(coordids, PATHS_MD)
+                            proton_avg, proton_se = get_histidine_statistics(coordids, xvg_data)
 
                 else:
-                    proton_avg, deproton_avg, proton_se, deproton_se  = get_statistics(str(coordid), PATHS_MD)
+                    proton_avg, deproton_avg, proton_se, deproton_se  = get_statistics(coordid, xvg_data)
 
 
                 ax.bar(['Protonated'], [proton_avg], yerr=proton_se)
@@ -334,8 +337,8 @@ def main():
     # ## Sigle residue protonation fraction time series
 
     # ### Glu513
-    glu513_frac1 = get_protonation_timeseries("67", PATHS_MD[0])
-    glu513_frac2 = get_protonation_timeseries("67", PATHS_MD[1])
+    glu513_frac1 = get_protonation_timeseries(67, PATHS_MD[0], xvg_data)
+    glu513_frac2 = get_protonation_timeseries(67, PATHS_MD[1], xvg_data)
 
     min_length = min(len(glu513_frac1), len(glu513_frac2))
 
@@ -357,8 +360,8 @@ def main():
 
 
     # ### Glu75
-    glu75_frac1 = get_protonation_timeseries("3", PATHS_MD[0])
-    glu75_frac2 = get_protonation_timeseries("3", PATHS_MD[1])
+    glu75_frac1 = get_protonation_timeseries(3, PATHS_MD[0], xvg_data)
+    glu75_frac2 = get_protonation_timeseries(3, PATHS_MD[1], xvg_data)
 
     min_length = min(len(glu75_frac1), len(glu75_frac2))
 
@@ -379,8 +382,8 @@ def main():
     plt.close()
 
     # ### Glu78
-    glu78_frac1 = get_protonation_timeseries("4", PATHS_MD[0])
-    glu78_frac2 = get_protonation_timeseries("4", PATHS_MD[1])
+    glu78_frac1 = get_protonation_timeseries(4, PATHS_MD[0], xvg_data)
+    glu78_frac2 = get_protonation_timeseries(4, PATHS_MD[1], xvg_data)
 
     min_length = min(len(glu78_frac1), len(glu78_frac2))
 
