@@ -8,10 +8,9 @@ import pstats
 import argparse
 from analyses import *
 from plot import *
-import matplotlib.pyplot as plt
+import pandas as pd
 
 # Import lamdareference.dat
-import pandas as pd
 
 def main():
     lambda_ref = pd.read_csv('test/lambdareference.dat', sep=r'\s+', engine='python')
@@ -27,380 +26,49 @@ def main():
     # Create an instance of XVGData for the directories
     xvg_data = XVGData(PATHS_MD)
 
-    # # MD1
+    # MD1
+
+    ## Overview lambda distributions
+    lambda_hist_md1 = plot_lambda_hist(PATH_MD1, xvg_data, coord2lambda_dict, lambda_ref)
+    lambda_hist_md1.savefig(f"{MD1_PREFIX}_histograms.png")
+    lambda_hist_md1.close()
+    
+
+    ## Protonation fraction time series
+    proton_ts_md1 = plot_protonation_timeseries(PATH_MD1, xvg_data, coord2lambda_dict, lambda_ref)
+    proton_ts_md1.savefig(f"{MD1_PREFIX}_timeseries.png")
+    proton_ts_md1.close()
+
+    # MD2
 
     # ## Overview lambda distributions
-
-    # Set up the grid size
-    rows = 20  # 10x10 grid for 100 plots
-    cols = 5
-
-    # Create a figure with subplots
-    fig, axes = plt.subplots(rows, cols, figsize=(15, 40))  # Adjusted figure size for 5x20 layout
-
-    coordid = 1
-    prv_resid = 0
-
-    # Generate and plot data for each subplot
-    fig.suptitle(PATH_MD1, fontsize=16, y=0.995)  # Moved suptitle up
-    fig.tight_layout(rect=[0, 0, 1, 0.99], pad=2.0)  # Adjust layout to leave space for suptitle
-
-    for i in range(rows):
-        for j in range(cols):
-            index = coordid-1
-            #print(f"Coordid {coordid}")
-
-            if index < lambda_ref.shape[0]:
-                ax = axes[i, j]
-                data = xvg_data.get_coord_xvg(coordid, PATH_MD1)
-                ax.hist(data[:,1], bins=500);
-
-                ax.set_xlim(-0.125,1.125)
-                ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
-
-            else:
-                continue
-            
-            coordid += 1
-
-    # Show the plot
-    #plt.show()
-    plt.savefig(f"{MD1_PREFIX}_histograms.png")
-    plt.close()
+    lambda_hist_md2 = plot_lambda_hist(PATH_MD2, xvg_data, coord2lambda_dict, lambda_ref)
+    lambda_hist_md2.savefig(f"{MD2_PREFIX}_histograms.png")
+    lambda_hist_md2.close()
 
     # ## Protonation fraction time series
+    proton_ts_md2 = plot_protonation_timeseries(PATH_MD2, xvg_data, coord2lambda_dict, lambda_ref)
+    proton_ts_md2.savefig(f"{MD2_PREFIX}_timeseries.png")
+    proton_ts_md2.close()
 
+    # MD1 vs MD2
 
-    # Set up the grid size
-    rows = 20  # 10x10 grid for 100 plots
-    cols = 5
-
-    # Create a figure with subplots
-    fig, axes = plt.subplots(rows, cols, figsize=(15, 40))  # Adjusted figure size for 5x20 layout
-
-    coordid = 1
-    prv_resid = 0
-
-    # Generate and plot data for each subplot
-    fig.suptitle(PATH_MD1, fontsize=16, y=0.995)  # Moved suptitle up
-    fig.tight_layout(rect=[0, 0, 1, 0.99], pad=2.0)  # Adjust layout to leave space for suptitle
-
-    for i in range(rows):
-        for j in range(cols):
-            index = coordid-1
-            #print(f"Coordid {coordid}")
-
-            if index < lambda_ref.shape[0]:
-                ax = axes[i, j]
-                
-                if lambda_ref.iloc[index]['resname'] == "HSPT": #If histidine
-                        if lambda_ref.iloc[index]['resid'] != prv_resid: #If this is histidine lambda1
-                                
-                            coordids = [coordid, coordid+1, coordid+2]
-                            
-                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_MD1, xvg_data)
-
-                            prv_resid = lambda_ref.iloc[index]['resid'] 
-                        else:
-                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_MD1, xvg_data)
-
-                else:
-                    res_prot_ts = get_protonation_timeseries(coordid, PATH_MD1, xvg_data)
-
-                ax.plot(res_prot_ts, label="MD1")
-                ax.set_ylim(-0.1,1.1)
-                ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
-
-            else:
-                continue
-            
-            coordid += 1
-
-    # Show the plot
-    #plt.show()
-    plt.savefig(f"{MD1_PREFIX}_timeseries.png")
-    plt.close()
-
-    # # MD1_3
-
-    # ## Overview lambda distributions
-
-    # Set up the grid size
-    rows = 20  # 10x10 grid for 100 plots
-    cols = 5
-
-    # Create a figure with subplots
-    fig, axes = plt.subplots(rows, cols, figsize=(15, 40))  # Adjusted figure size for 5x20 layout
-
-    coordid = 1
-    prv_resid = 0
-
-    # Generate and plot data for each subplot
-    fig.suptitle(PATH_MD2, fontsize=16, y=0.995)  # Moved suptitle up
-    fig.tight_layout(rect=[0, 0, 1, 0.99], pad=2.0)  # Adjust layout to leave space for suptitle
-
-    for i in range(rows):
-        for j in range(cols):
-            index = coordid-1
-            #print(f"Coordid {coordid}")
-
-            if index < lambda_ref.shape[0]:
-                ax = axes[i, j]
-                data = xvg_data.get_coord_xvg(coordid, PATH_MD2)
-                ax.hist(data[:,1], bins=500);
-                
-                ax.set_xlim(-0.125,1.125)
-                ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
-
-            else:
-                continue
-            
-            coordid += 1
-
-    # Show the plot
-    #plt.show()
-    plt.savefig(f"{MD2_PREFIX}_histograms.png")
-    plt.close()
-
-    # ## Protonation fraction time series
-
-    # Set up the grid size
-    rows = 20  # 10x10 grid for 100 plots
-    cols = 5
-
-    # Create a figure with subplots
-    fig, axes = plt.subplots(rows, cols, figsize=(15, 40))  # Adjusted figure size for 5x20 layout
-
-    coordid = 1
-    prv_resid = 0
-
-    # Generate and plot data for each subplot
-    fig.suptitle(PATH_MD2, fontsize=16, y=0.995)  # Moved suptitle up
-    fig.tight_layout(rect=[0, 0, 1, 0.99], pad=2.0)  # Adjust layout to leave space for suptitle
-
-    for i in range(rows):
-        for j in range(cols):
-            index = coordid-1
-            #print(f"Coordid {coordid}")
-
-            if index < lambda_ref.shape[0]:
-                ax = axes[i, j]
-                
-                if lambda_ref.iloc[index]['resname'] == "HSPT": #If histidine
-                        if lambda_ref.iloc[index]['resid'] != prv_resid: #If this is histidine lambda1
-                                
-                            coordids = [coordid, coordid+1, coordid+2]
-                            
-                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_MD2, xvg_data)
-
-                            prv_resid = lambda_ref.iloc[index]['resid'] 
-                        else:
-                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_MD2, xvg_data)
-
-                else:
-                    res_prot_ts = get_protonation_timeseries(coordid, PATH_MD2, xvg_data)
-
-                ax.plot(res_prot_ts, label="MD1_3")
-                ax.set_ylim(-0.1,1.1)
-                ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
-
-            else:
-                continue
-            
-            coordid += 1
-
-    # Show the plot
-    #plt.show()
-    plt.savefig(f"{MD2_PREFIX}_timeseries.png")
-    plt.close()
-
-    # MD1 vs MD1_3
-
-
-    # Set up the grid size
-    rows = 20  # 10x10 grid for 100 plots
-    cols = 5
-
-    # Create a figure with subplots
-    fig, axes = plt.subplots(rows, cols, figsize=(15, 40))  # Adjusted figure size for 5x20 layout
-
-    coordid = 1
-    prv_resid = 0
-
-    # Generate and plot data for each subplot
-    fig.suptitle(PATHS_MD, fontsize=16, y=0.995)  # Moved suptitle up
-    fig.tight_layout(rect=[0, 0, 1, 0.99], pad=2.0)  # Adjust layout to leave space for suptitle
-
-    for i in range(rows):
-        for j in range(cols):
-            index = coordid-1
-            #print(f"Coordid {coordid}")
-
-            if index < lambda_ref.shape[0]:
-                ax = axes[i, j]
-                
-                if lambda_ref.iloc[index]['resname'] == "HSPT": #If histidine
-                        if lambda_ref.iloc[index]['resid'] != prv_resid: #If this is histidine lambda1
-                                
-                            coordids = [coordid, coordid+1, coordid+2]
-                            
-                            res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATHS_MD[0], xvg_data)
-                            res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATHS_MD[1], xvg_data)
-
-                            prv_resid = lambda_ref.iloc[index]['resid'] 
-                        else:
-                            res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATHS_MD[0], xvg_data)
-                            res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATHS_MD[1], xvg_data)
-                else:
-                    res_prot_ts1 = get_protonation_timeseries(coordid, PATHS_MD[0], xvg_data)
-                    res_prot_ts2 = get_protonation_timeseries(coordid, PATHS_MD[1], xvg_data)
-                
-                min_length = min(len(res_prot_ts1), len(res_prot_ts2))
-                total_protarray = np.vstack((res_prot_ts1[:min_length], res_prot_ts2[:min_length]))
-                total_protonse = np.std(total_protarray, axis=0) / np.sqrt(len(total_protarray)) 
-                ax.plot(np.mean(total_protarray, axis=0))
-                ax.fill_between(np.arange(len(total_protarray[0,:])), np.mean(total_protarray, axis=0) - total_protonse, np.mean(total_protarray, axis=0) + total_protonse, alpha=0.5)
-                ax.set_ylim(-0.1,1.1)
-                ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
-
-            else:
-                continue
-            
-            coordid += 1
-
-    # Show the plot
-    #plt.show()
-    plt.savefig(f"{MD1_PREFIX}_{MD2_PREFIX}_convergence.png")
-    plt.close()
-
+    # ## Protonation convergence
+    proton_conv = plot_protonation_convergence(PATHS_MD, xvg_data, coord2lambda_dict, lambda_ref)
+    proton_conv.savefig(f"{MD1_PREFIX}_{MD2_PREFIX}_convergence.png")
+    proton_conv.close()
 
     # ## Overview protonation fractions
-
-    # Set up the grid size
-    rows = 20  # 10x10 grid for 100 plots
-    cols = 5
-
-    # Create a figure with subplots
-    fig, axes = plt.subplots(rows, cols, figsize=(15, 40))  # Adjusted figure size for 5x20 layout
-    fig.tight_layout(pad=2.0)  # Optional: adjust padding between plots
-
-    coordid = 1
-    prv_resid = 0
-
-
-
-    # Generate and plot data for each subplot
-    for i in range(rows):
-        for j in range(cols):
-            index = coordid-1
-            #print(f"Coordid {coordid}")
-
-            if index < lambda_ref.shape[0]:
-                ax = axes[i, j]
-                
-                # Generate some data; here, we're using sine waves with different frequencies
-
-                if lambda_ref.iloc[index]['resname'] == "HSPT": #If histidine
-                        if lambda_ref.iloc[index]['resid'] != prv_resid: #If this is histidine lambda1
-                                
-                            coordids = [coordid, coordid+1, coordid+2]
-                            
-                            proton_avg, proton_se = get_histidine_statistics(coordids, xvg_data)
-
-                            prv_resid = lambda_ref.iloc[index]['resid'] 
-                        else:
-                            proton_avg, proton_se = get_histidine_statistics(coordids, xvg_data)
-
-                else:
-                    proton_avg, deproton_avg, proton_se, deproton_se  = get_statistics(coordid, xvg_data)
-
-
-                ax.bar(['Protonated'], [proton_avg], yerr=proton_se)
-
-
-                ax.set_ylim(0,1)
-                ax.set_title(f'{lambda_ref.iloc[coordid-1]["resname"]}_{lambda_ref.iloc[coordid-1]["resid"]}')
-
-                ax.set_xticks([])
-                ax.set_yticks([])
-            else:
-                continue
-
-            
-            coordid += 1
-
-    # Show the plot
-    #plt.show()
-    plt.savefig(f"{MD1_PREFIX}_{MD2_PREFIX}_protonfraction.png")
-    plt.close()
+    proton_frac = plot_protonation_fraction(PATHS_MD, xvg_data, lambda_ref)
+    proton_frac.savefig(f"{MD1_PREFIX}_{MD2_PREFIX}_protonfraction.png")
+    proton_frac.close()
 
     # ## Sigle residue protonation fraction time series
-
     # ### Glu513
-    glu513_frac1 = get_protonation_timeseries(67, PATHS_MD[0], xvg_data)
-    glu513_frac2 = get_protonation_timeseries(67, PATHS_MD[1], xvg_data)
+    res67_conv = single_residue_convergence(67, PATHS_MD, xvg_data, lambda_ref)
+    res67_conv.savefig("Glu513.png")
+    res67_conv.close()
 
-    min_length = min(len(glu513_frac1), len(glu513_frac2))
-
-    total_protarray = np.vstack((glu513_frac1[:min_length], glu513_frac2[:min_length]))
-
-    total_protonse = np.std(total_protarray, axis=0) / np.sqrt(len(total_protarray)) 
-
-    plt.plot(np.mean(total_protarray, axis=0), label="Glu513")
-    plt.fill_between(np.arange(len(total_protarray[0,:])), np.mean(total_protarray, axis=0) - total_protonse, np.mean(total_protarray, axis=0) + total_protonse, alpha=0.5)
-
-    plt.ylim(0,1)
-    plt.ylabel("Protonation fraction")
-    plt.xlabel("Time (ps)")
-    plt.legend()
-    plt.title("GTR1 IF cphmd at pH 7.5")
-    #plt.show()
-    plt.savefig("Glu513.png")
-    plt.close()
-
-
-    # ### Glu75
-    glu75_frac1 = get_protonation_timeseries(3, PATHS_MD[0], xvg_data)
-    glu75_frac2 = get_protonation_timeseries(3, PATHS_MD[1], xvg_data)
-
-    min_length = min(len(glu75_frac1), len(glu75_frac2))
-
-    total_protarray = np.vstack((glu75_frac1[:min_length], glu75_frac2[:min_length]))
-
-    total_protonse = np.std(total_protarray, axis=0) / np.sqrt(len(total_protarray)) 
-
-    plt.plot(np.mean(total_protarray, axis=0), label="Glu75")
-    plt.fill_between(np.arange(len(total_protarray[0,:])), np.mean(total_protarray, axis=0) - total_protonse, np.mean(total_protarray, axis=0) + total_protonse, alpha=0.5)
-
-    plt.ylim(0,1)
-    plt.ylabel("Protonation fraction")
-    plt.xlabel("Time (ps)")
-    plt.legend()
-    plt.title("GTR1 IF cphmd at pH 7.5")
-    #plt.show()
-    plt.savefig("Glu75.png")
-    plt.close()
-
-    # ### Glu78
-    glu78_frac1 = get_protonation_timeseries(4, PATHS_MD[0], xvg_data)
-    glu78_frac2 = get_protonation_timeseries(4, PATHS_MD[1], xvg_data)
-
-    min_length = min(len(glu78_frac1), len(glu78_frac2))
-
-    total_protarray = np.vstack((glu78_frac1[:min_length], glu78_frac2[:min_length]))
-
-    total_protonse = np.std(total_protarray, axis=0) / np.sqrt(len(total_protarray)) 
-
-    plt.plot(np.mean(total_protarray, axis=0), label="Glu78")
-    plt.fill_between(np.arange(len(total_protarray[0,:])), np.mean(total_protarray, axis=0) - total_protonse, np.mean(total_protarray, axis=0) + total_protonse, alpha=0.5)
-
-    plt.ylim(0,1)
-    plt.ylabel("Protonation fraction")
-    plt.xlabel("Time (ps)")
-    plt.legend()
-    plt.title("GTR1 IF cphmd at pH 7.5")
-    #plt.show()
-    plt.savefig("Glu78.png")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run analysis script with optional profiling.")
