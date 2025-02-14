@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from analyses import *
 
-def plot_lambda_hist(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, rows=20, cols=5):
+def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5):
     """Plot histogram of lambda values"""
         # Set up the grid size
     #rows = 20  # 10x10 grid for 100 plots
@@ -24,8 +24,8 @@ def plot_lambda_hist(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, rows=20, cols
 
             if index < lambda_ref.shape[0]:
                 ax = axes[i, j]
-                data = read_coord_xvg(str(coordid), PATH_ANALYSIS)
-                ax.hist(data[:,1], bins=1000);
+                data = xvg_data.get_coord_xvg(coordid, PATH_ANALYSIS)
+                ax.hist(data[:,1], bins=500);
 
                 ax.set_xlim(-0.125,1.125)
                 ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
@@ -38,7 +38,7 @@ def plot_lambda_hist(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, rows=20, cols
 # Show the plot
     return plt
 
-def plot_protonation_timeseries(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, rows=20, cols=5):
+def plot_protonation_timeseries(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5):
     """"Plot protonation time-series"""
     ## Set up the grid size
     #rows = 20  # 10x10 grid for 100 plots
@@ -67,14 +67,14 @@ def plot_protonation_timeseries(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, ro
                                 
                             coordids = [coordid, coordid+1, coordid+2]
                             
-                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS)
+                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS, xvg_data)
 
                             prv_resid = lambda_ref.iloc[index]['resid'] 
                         else:
-                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS)
+                            res_prot_ts = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS, xvg_data)
 
                 else:
-                    res_prot_ts = get_protonation_timeseries(coordid, PATH_ANALYSIS)
+                    res_prot_ts = get_protonation_timeseries(coordid, PATH_ANALYSIS, xvg_data)
 
                 ax.plot(res_prot_ts, label="MD1")
                 ax.set_ylim(-0.1,1.1)
@@ -91,7 +91,7 @@ def plot_protonation_timeseries(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, ro
 
     return plt
 
-def plot_protonation_convergence(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, rows=20, cols=5):
+def plot_protonation_convergence(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5):
     """Plot protonation avg and standard error time-series. Just two replicas supported - add get_protfrac_ts if more than 2"""
     # Set up the grid size
     #rows = 20  # 10x10 grid for 100 plots
@@ -120,16 +120,16 @@ def plot_protonation_convergence(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, r
                                 
                             coordids = [coordid, coordid+1, coordid+2]
                             
-                            res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[0])
-                            res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[1])
+                            res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[0], xvg_data)
+                            res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[1], xvg_data)
 
                             prv_resid = lambda_ref.iloc[index]['resid'] 
                         else:
-                            res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[0])
-                            res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[1])
+                            res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[0], xvg_data)
+                            res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[1], xvg_data)
                 else:
-                    res_prot_ts1 = get_protonation_timeseries(coordid, PATH_ANALYSIS[0])
-                    res_prot_ts2 = get_protonation_timeseries(coordid, PATH_ANALYSIS[1])
+                    res_prot_ts1 = get_protonation_timeseries(coordid, PATH_ANALYSIS[0], xvg_data)
+                    res_prot_ts2 = get_protonation_timeseries(coordid, PATH_ANALYSIS[1], xvg_data)
                 
                 min_length = min(len(res_prot_ts1), len(res_prot_ts2))
                 total_protarray = np.vstack((res_prot_ts1[:min_length], res_prot_ts2[:min_length]))
@@ -150,7 +150,7 @@ def plot_protonation_convergence(PATH_ANALYSIS, coord2lambda_dict, lambda_ref, r
     return plt
 
 
-def plot_protonation_fraction(PATH_ANALYSIS, lambda_ref, rows=20, cols=5):
+def plot_protonation_fraction(PATH_ANALYSIS, xvg_data, lambda_ref, rows=20, cols=5):
     """Plot protonation fractions avg and se"""
     # Set up the grid size
     #rows = 20  # 10x10 grid for 100 plots
@@ -181,14 +181,14 @@ def plot_protonation_fraction(PATH_ANALYSIS, lambda_ref, rows=20, cols=5):
                                 
                             coordids = [coordid, coordid+1, coordid+2]
                             
-                            proton_avg, proton_se = get_histidine_statistics(coordids, PATH_ANALYSIS)
+                            proton_avg, proton_se = get_histidine_statistics(coordids, xvg_data)
 
                             prv_resid = lambda_ref.iloc[index]['resid'] 
                         else:
-                            proton_avg, proton_se = get_histidine_statistics(coordids, PATH_ANALYSIS)
+                            proton_avg, proton_se = get_histidine_statistics(coordids, xvg_data)
 
                 else:
-                    proton_avg, deproton_avg, proton_se, deproton_se  = get_statistics(str(coordid), PATH_ANALYSIS)
+                    proton_avg, deproton_avg, proton_se, deproton_se  = get_statistics(coordid, xvg_data)
 
 
                 ax.bar(['Protonated'], [proton_avg], yerr=proton_se)
@@ -208,10 +208,10 @@ def plot_protonation_fraction(PATH_ANALYSIS, lambda_ref, rows=20, cols=5):
     # Show the plot
     return plt
 
-def single_residue_convergence(coordid, PATH_ANALYSIS, lambda_ref, title="Constant-pH MD"):
+def single_residue_convergence(coordid, PATH_ANALYSIS, xvg_data, lambda_ref, title="Constant-pH MD"):
     """THIS WORKS ONLY FOR NON HISTIDINES! Plot convergence of single residue. Just two replicas supported - add res_fracX if more."""
-    res_frac1 = get_protonation_timeseries(coordid, PATH_ANALYSIS[0])
-    res_frac2 = get_protonation_timeseries(coordid, PATH_ANALYSIS[1])
+    res_frac1 = get_protonation_timeseries(coordid, PATH_ANALYSIS[0], xvg_data)
+    res_frac2 = get_protonation_timeseries(coordid, PATH_ANALYSIS[1], xvg_data)
 
     min_length = min(len(res_frac1), len(res_frac2))
 
