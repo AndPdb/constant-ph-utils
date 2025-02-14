@@ -3,13 +3,27 @@ import os
 from typing import Dict, Tuple, List
 
 class XVGData:
+    """
+    A class to handle the loading and processing of XVG data files from multiple directories.
+    """
+
     def __init__(self, analysis_dirs: List[str], num_rows: int = 2000000):
+        """
+        Initializes the XVGData object.
+
+        Args:
+            analysis_dirs (List[str]): List of directories containing the XVG files.
+            num_rows (int): Maximum number of rows to read from each XVG file.
+        """
         self.analysis_dirs = analysis_dirs
         self.num_rows = num_rows
         self.data = {dir: {} for dir in analysis_dirs}
         self.load_all_data()
 
     def load_all_data(self):
+        """
+        Loads all XVG data from the specified directories into memory.
+        """
         for analysis_dir in self.analysis_dirs:
             for coord_id in range(1, self.num_rows + 1):  # Adjust the range as needed
                 coord_xvg_name = f"cphmd-coord-{coord_id}.xvg"
@@ -18,6 +32,15 @@ class XVGData:
                     self.data[analysis_dir][coord_id] = self.fast_read_numpy_array(coord_xvg_path)
 
     def fast_read_numpy_array(self, filename: str) -> np.ndarray:
+        """
+        Reads an XVG file into a NumPy array, skipping comment lines.
+
+        Args:
+            filename (str): Path to the XVG file.
+
+        Returns:
+            np.ndarray: Array containing the data from the XVG file.
+        """
         data = np.empty((self.num_rows, 2), dtype=np.float64)  # Preallocate array
         index = 0  # Keep track of valid data row index
 
@@ -37,35 +60,7 @@ class XVGData:
     def get_coord_xvg(self, coord_id: int, analysis_dir: str) -> np.ndarray:
         return self.data[analysis_dir].get(coord_id, np.array([]))
     
-# def fast_read_numpy_array(filename, num_rows=2000000):
-#     data = np.empty((num_rows, 2), dtype=np.float64)  # Preallocate array
-#     index = 0  # Keep track of valid data row index
-
-#     with open(filename, 'r') as f:
-#         for line in f:
-#             if line[0] in ('#', '@'):  # Skip comments
-#                 continue
-#             values = line.split()
-#             data[index, 0] = float(values[0])
-#             data[index, 1] = float(values[1])
-#             index += 1
-#             if index >= num_rows:  # Prevent overflow
-#                 break
     
-#     return data[:index, :]
-
-# def read_coord_xvg(coord_id: int, analysis_dir: str) -> np.ndarray:
-#     """
-#     Reads data from the XVG file corresponding to the given coord_id.
-#     Returns a numpy array with the data.
-#     """
-#     # Construct the XVG file path
-#     coord_xvg_name = f"cphmd-coord-{coord_id}.xvg"
-#     coord_xvg_path = os.path.join(analysis_dir, coord_xvg_name)
-#     # Load data from the file, skipping comment lines
-#     return fast_read_numpy_array(coord_xvg_path)
-
-
 def calculate_fractions(array_xvg: np.ndarray) -> Tuple[float, float]:
     """
     Calculates protonation and deprotonation fractions from the given data.
