@@ -72,7 +72,7 @@ def main():
     
     # ### Glu78
     glu78_id = resid2coordid(78, lambda_ref)
-    res2_conv = single_residue_convergence(4, PATHS_MD, xvg_data, lambda_ref)
+    res2_conv = single_residue_convergence(glu78_id, PATHS_MD, xvg_data, lambda_ref)
     res2_conv.savefig("Glu78.png")
     res2_conv.close()
 
