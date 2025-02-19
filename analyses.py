@@ -223,3 +223,20 @@ def parse_lambda_reference(lambda_reference_path: str) -> Dict[int, int]:
             # Add the mapping to the dictionary
             coord_to_lambda[coord_id] = lambda_id
     return coord_to_lambda
+
+def resid2coordid(resid: int, lambda_ref: Dict[int, int]) -> int:
+    """
+    Converts a residue ID to a coordinate ID using the lambda reference dictionary.
+    """
+    
+    # Extract the row where 'resid' is 75
+    row = lambda_ref[lambda_ref['resid'] == resid]
+
+    # Get the 'coordinateFile' value from the row
+    coordinate_file = row['coordinateFile'].values[0]
+
+    # Split the filename to extract the desired part
+    file_parts = coordinate_file.split('-')
+    coordinate_id = file_parts[-1].split('.xvg')[0]
+
+    return int(coordinate_id)

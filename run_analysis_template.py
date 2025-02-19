@@ -64,20 +64,23 @@ def main():
     proton_frac.close()
 
     # ## Sigle residue protonation fraction time series
-    # ### Glu513
-    res67_conv = single_residue_convergence(67, PATHS_MD, xvg_data, lambda_ref)
-    res67_conv.savefig("Glu513.png")
-    res67_conv.close()
-
     # ### Glu75
-    res3_conv = single_residue_convergence(3, PATHS_MD, xvg_data, lambda_ref)
-    res3_conv.savefig("Glu75.png")
-    res3_conv.close()
+    glu75_id = resid2coordid(75, lambda_ref)
+    res1_conv = single_residue_convergence(glu75_id, PATHS_MD, xvg_data, lambda_ref)
+    res1_conv.savefig("Glu75.png")
+    res1_conv.close()
     
-    # ### Glu75
-    res4_conv = single_residue_convergence(4, PATHS_MD, xvg_data, lambda_ref)
-    res4_conv.savefig("Glu78.png")
-    res4_conv.close()
+    # ### Glu78
+    glu78_id = resid2coordid(78, lambda_ref)
+    res2_conv = single_residue_convergence(4, PATHS_MD, xvg_data, lambda_ref)
+    res2_conv.savefig("Glu78.png")
+    res2_conv.close()
+
+    # ### Glu513
+    glu513_id = resid2coordid(513, lambda_ref)
+    res3_conv = single_residue_convergence(glu513_id, PATHS_MD, xvg_data, lambda_ref)
+    res3_conv.savefig("Glu513.png")
+    res3_conv.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run analysis script with optional profiling.")
