@@ -35,6 +35,9 @@ def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, row
             
             coordid += 1
 
+    for ax in axes.flat[coordid-1:]:
+        ax.remove()
+
 # Show the plot
     return plt
 
@@ -88,6 +91,9 @@ def plot_protonation_timeseries(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lamb
                 continue
             
             coordid += 1
+
+    for ax in axes.flat[coordid-1:]:
+        ax.remove()
 
     return plt
 
@@ -147,6 +153,10 @@ def plot_protonation_convergence(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lam
                 continue
             
             coordid += 1
+
+    for ax in axes.flat[coordid-1:]:
+        ax.remove()
+
     return plt
 
 
@@ -206,6 +216,9 @@ def plot_protonation_fraction(PATH_ANALYSIS, xvg_data, lambda_ref, rows=20, cols
             coordid += 1
 
     # Show the plot
+    for ax in axes.flat[coordid-1:]:
+        ax.remove()
+        
     return plt
 
 def single_residue_convergence(coordid, PATH_ANALYSIS, xvg_data, lambda_ref, title="Constant-pH MD"):
