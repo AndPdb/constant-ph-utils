@@ -69,6 +69,15 @@ def main():
     res67_conv.savefig("Glu513.png")
     res67_conv.close()
 
+    # ### Glu75
+    res3_conv = single_residue_convergence(3, PATHS_MD, xvg_data, lambda_ref)
+    res3_conv.savefig("Glu75.png")
+    res3_conv.close()
+    
+    # ### Glu75
+    res4_conv = single_residue_convergence(4, PATHS_MD, xvg_data, lambda_ref)
+    res4_conv.savefig("Glu78.png")
+    res4_conv.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run analysis script with optional profiling.")

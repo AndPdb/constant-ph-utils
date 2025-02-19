@@ -1,6 +1,7 @@
 import numpy as np
-import os
+import os, glob
 from typing import Dict, Tuple, List
+from concurrent.futures import ThreadPoolExecutor
 
 class XVGData:
     """
@@ -24,12 +25,23 @@ class XVGData:
         """
         Loads all XVG data from the specified directories into memory.
         """
-        for analysis_dir in self.analysis_dirs:
-            for coord_id in range(1, self.num_rows + 1):  # Adjust the range as needed
-                coord_xvg_name = f"cphmd-coord-{coord_id}.xvg"
-                coord_xvg_path = os.path.join(analysis_dir, coord_xvg_name)
-                if os.path.exists(coord_xvg_path):
-                    self.data[analysis_dir][coord_id] = self.fast_read_numpy_array(coord_xvg_path)
+        with ThreadPoolExecutor() as executor:
+            futures = []
+            for analysis_dir in self.analysis_dirs:
+                for coord_id in range(1, len(glob.glob(f"{analysis_dir}/*.xvg")) + 1):
+                    coord_xvg_name = f"cphmd-coord-{coord_id}.xvg"
+                    coord_xvg_path = os.path.join(analysis_dir, coord_xvg_name)
+                    print(coord_xvg_path)
+                    if os.path.exists(coord_xvg_path):
+                        futures.append(executor.submit(self._load_file, coord_xvg_path, analysis_dir, coord_id))
+            for future in futures:
+                future.result()
+
+    def _load_file(self, filepath: str, analysis_dir: str, coord_id: int):
+        """
+        Helper function to load a single XVG file.
+        """
+        self.data[analysis_dir][coord_id] = self.fast_read_numpy_array(filepath)
 
     def fast_read_numpy_array(self, filename: str) -> np.ndarray:
         """
