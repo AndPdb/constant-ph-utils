@@ -14,6 +14,9 @@ import pandas as pd
 
 def main():
     lambda_ref = pd.read_csv('test/lambdareference.dat', sep=r'\s+', engine='python')
+    
+    if lambda_ref['chain'][0].endswith("xvg"):
+        lambda_ref = lambda_ref.rename(columns={"chain": "coordinateFile", "coordinateFile": "chain"})
 
     coord2lambda_dict = parse_lambda_reference('test/lambdareference.dat')
 
