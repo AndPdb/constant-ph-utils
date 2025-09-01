@@ -78,6 +78,11 @@ def plot_protonation_timeseries(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lamb
 
                 else:
                     res_prot_ts = get_protonation_timeseries(coordid, PATH_ANALYSIS, xvg_data)
+                
+                # Save output in npz file named after the residue
+                resname = lambda_ref.iloc[index]['resname']
+                resid = lambda_ref.iloc[index]['resid']
+                np.savez(f"{PATH_ANALYSIS}/{resname}_{resid}_protonation_timeseries.npz", res_prot_ts=res_prot_ts)
 
                 ax.plot(res_prot_ts, label="MD1")
                 ax.set_ylim(-0.1,1.1)
@@ -95,6 +100,8 @@ def plot_protonation_timeseries(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lamb
     for ax in axes.flat[coordid-1:]:
         ax.remove()
 
+    
+        
     return plt
 
 def plot_protonation_convergence(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5):
@@ -209,6 +216,12 @@ def plot_protonation_fraction(PATH_ANALYSIS, xvg_data, lambda_ref, rows=20, cols
 
                 ax.set_xticks([])
                 ax.set_yticks([])
+
+                # Save output in npz file named after the residue
+                resname = lambda_ref.iloc[index]['resname']
+                resid = lambda_ref.iloc[index]['resid']
+                np.savez(f"{resname}_{resid}_protonation_fraction.npz", res_prot_avg=proton_avg, res_prot_se=proton_se)
+
             else:
                 continue
 
