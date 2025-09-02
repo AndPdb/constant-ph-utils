@@ -246,7 +246,7 @@ def plot_protonation_fraction(PATH_ANALYSIS, xvg_data, lambda_ref, rows=20, cols
                     proton_avg, deproton_avg, proton_se, deproton_se  = get_statistics(coordid, xvg_data)
 
 
-                ax.bar(['Protonated'], [proton_avg], yerr=proton_se)
+                ax.bar(['Protonated'], [proton_avg], yerr=proton_se, capsize=5, linewidth=1)
 
 
                 ax.set_ylim(0,1)
