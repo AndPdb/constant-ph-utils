@@ -14,7 +14,11 @@ def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, row
     prv_resid = 0
 
     # Generate and plot data for each subplot
-    fig.suptitle(PATH_ANALYSIS, fontsize=16, y=0.995)  # Moved suptitle up
+    if quality == 'Debug':
+        fig.suptitle(PATH_ANALYSIS, fontsize=16, y=0.995)  # Moved suptitle up
+    elif quality == 'Publication':
+        fig.suptitle("Lambda distributions", fontsize=16, y=0.995)  # Moved suptitle up
+
     fig.tight_layout(rect=[0, 0, 1, 0.99], pad=2.0)  # Adjust layout to leave space for suptitle
 
     for i in range(rows):
@@ -57,7 +61,11 @@ def plot_protonation_timeseries(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict
     prv_resid = 0
 
     # Generate and plot data for each subplot
-    fig.suptitle(PATH_ANALYSIS, fontsize=16, y=0.995)  # Moved suptitle up
+    if quality == 'Debug':
+        fig.suptitle(PATH_ANALYSIS, fontsize=16, y=0.995)  # Moved suptitle up
+    elif quality == 'Publication':
+        fig.suptitle("Protonation time-series", fontsize=16, y=0.995)  # Moved suptitle up
+
     fig.tight_layout(rect=[0, 0, 1, 0.99], pad=2.0)  # Adjust layout to leave space for suptitle
 
     for i in range(rows):
@@ -129,7 +137,11 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data, coord2lambda_dic
     prv_resid = 0
 
     # Generate and plot data for each subplot
-    fig.suptitle(PATH_ANALYSIS, fontsize=16, y=0.995)  # Moved suptitle up
+    if quality == 'Debug':
+        fig.suptitle(PATH_ANALYSIS, fontsize=16, y=0.995)  # Moved suptitle up
+    elif quality == 'Publication':
+        fig.suptitle("Protonation convergence", fontsize=16, y=0.995)  # Moved suptitle up
+
     fig.tight_layout(rect=[0, 0, 1, 0.99], pad=2.0)  # Adjust layout to leave space for suptitle
 
     for i in range(rows):
