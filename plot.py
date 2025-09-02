@@ -41,7 +41,7 @@ def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, row
 # Show the plot
     return plt
 
-def plot_protonation_timeseries(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, npz_output=False):
+def plot_protonation_timeseries(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, npz_output=False):
     """"Plot protonation time-series"""
     ## Set up the grid size
     #rows = 20  # 10x10 grid for 100 plots
@@ -87,10 +87,15 @@ def plot_protonation_timeseries(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lamb
 
                 ax.plot(res_prot_ts, label="MD1")
                 ax.set_ylim(-0.1,1.1)
-                # If you want to set the xticks and labels uncomment the following lines
-                #xticks = [0, 200000, 400000, 600000, 800000, 1000000]
-                #ax.set_xticks(xticks)
-                #ax.set_xticklabels([0, 200, 400, 600, 800, 1000])
+
+                # Set xticks and labels aaccording to the simulation time
+                length = round(time/10000)*10000
+                xticks = np.arange(0, length, length/3)
+                xticks = np.round(xticks/10000)*10000
+                xticks = np.concatenate((xticks, [length]))
+                ax.set_xticks(xticks.astype(int))
+                ax.set_xticklabels((xticks/1000).astype(int))
+                
                 ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
 
             else:
@@ -105,7 +110,7 @@ def plot_protonation_timeseries(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lamb
         
     return plt
 
-def plot_protonation_convergence(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5):
+def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5):
     """Plot protonation avg and standard error time-series. Just two replicas supported - add get_protfrac_ts if more than 2"""
     # Set up the grid size
     #rows = 20  # 10x10 grid for 100 plots
@@ -150,10 +155,15 @@ def plot_protonation_convergence(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lam
                 total_protonse = np.std(total_protarray, axis=0) / np.sqrt(len(total_protarray)) 
                 ax.plot(np.mean(total_protarray, axis=0))
                 ax.fill_between(np.arange(len(total_protarray[0,:])), np.mean(total_protarray, axis=0) - total_protonse, np.mean(total_protarray, axis=0) + total_protonse, alpha=0.5)
-                # If you want to set the xticks and labels uncomment the following lines
-                #xticks = [0, 200000, 400000, 600000, 800000, 1000000]
-                #ax.set_xticks(xticks)
-                #ax.set_xticklabels([0, 200, 400, 600, 800, 1000])
+
+                # Set xticks and labels aaccording to the simulation time
+                length = round(time/10000)*10000
+                xticks = np.arange(0, length, length/3)
+                xticks = np.round(xticks/10000)*10000
+                xticks = np.concatenate((xticks, [length]))
+                ax.set_xticks(xticks.astype(int))
+                ax.set_xticklabels((xticks/1000).astype(int))
+
                 ax.set_ylim(-0.1,1.1)
                 ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
 

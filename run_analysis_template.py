@@ -29,6 +29,11 @@ def main():
     # Create an instance of XVGData for the directories
     xvg_data = XVGData(PATHS_MD)
 
+    time_MD1 = xvg_data.get_coord_xvg(1, PATH_MD1)[-1,0]  # Get last time of MD1
+    time_MD2 = xvg_data.get_coord_xvg(1, PATH_MD2)[-1,0]  # Get last time of MD1
+    time_MDs = min(time_MD1, time_MD2)
+
+
     # MD1
 
     ## Overview lambda distributions
@@ -38,7 +43,7 @@ def main():
     
 
     ## Protonation fraction time series
-    proton_ts_md1 = plot_protonation_timeseries(PATH_MD1, xvg_data, coord2lambda_dict, lambda_ref, npz_output=False)
+    proton_ts_md1 = plot_protonation_timeseries(PATH_MD1, time_MD1, xvg_data, coord2lambda_dict, lambda_ref, npz_output=False)
     proton_ts_md1.savefig(f"{MD1_PREFIX}_timeseries.png")
     proton_ts_md1.close()
 
@@ -50,14 +55,14 @@ def main():
     lambda_hist_md2.close()
 
     # ## Protonation fraction time series
-    proton_ts_md2 = plot_protonation_timeseries(PATH_MD2, xvg_data, coord2lambda_dict, lambda_ref, npz_output=False)
+    proton_ts_md2 = plot_protonation_timeseries(PATH_MD2, time_MD2, xvg_data, coord2lambda_dict, lambda_ref, npz_output=False)
     proton_ts_md2.savefig(f"{MD2_PREFIX}_timeseries.png")
     proton_ts_md2.close()
 
     # MD1 vs MD2
 
     # ## Protonation convergence
-    proton_conv = plot_protonation_convergence(PATHS_MD, xvg_data, coord2lambda_dict, lambda_ref)
+    proton_conv = plot_protonation_convergence(PATHS_MD, time_MDs, xvg_data, coord2lambda_dict, lambda_ref)
     proton_conv.savefig(f"{MD1_PREFIX}_{MD2_PREFIX}_convergence.png")
     proton_conv.close()
 
