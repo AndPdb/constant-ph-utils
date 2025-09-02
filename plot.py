@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from analyses import *
 
-def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5):
+def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug'):
     """Plot histogram of lambda values"""
         # Set up the grid size
     #rows = 20  # 10x10 grid for 100 plots
@@ -28,8 +28,11 @@ def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, row
                 ax.hist(data[:,1], bins=500);
 
                 ax.set_xlim(-0.125,1.125)
-                ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
-
+                #Decide whether to use residue name or coordid in title
+                if quality == 'Debug':
+                    ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
+                elif quality == 'Publication':
+                    ax.set_title(f'{lambda_ref.iloc[coordid-1]["resname"]}_{lambda_ref.iloc[coordid-1]["resid"]}')
             else:
                 continue
             
@@ -41,7 +44,7 @@ def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, row
 # Show the plot
     return plt
 
-def plot_protonation_timeseries(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, npz_output=False):
+def plot_protonation_timeseries(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug', npz_output=False):
     """"Plot protonation time-series"""
     ## Set up the grid size
     #rows = 20  # 10x10 grid for 100 plots
@@ -96,7 +99,10 @@ def plot_protonation_timeseries(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict
                 ax.set_xticks(xticks.astype(int))
                 ax.set_xticklabels((xticks/1000).astype(int))
                 
-                ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
+                if quality == 'Debug':
+                    ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
+                elif quality == 'Publication':
+                    ax.set_title(f'{lambda_ref.iloc[coordid-1]["resname"]}_{lambda_ref.iloc[coordid-1]["resid"]}')
 
             else:
                 continue
@@ -110,7 +116,7 @@ def plot_protonation_timeseries(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict
         
     return plt
 
-def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5):
+def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug'):
     """Plot protonation avg and standard error time-series. Just two replicas supported - add get_protfrac_ts if more than 2"""
     # Set up the grid size
     #rows = 20  # 10x10 grid for 100 plots
@@ -165,7 +171,12 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data, coord2lambda_dic
                 ax.set_xticklabels((xticks/1000).astype(int))
 
                 ax.set_ylim(-0.1,1.1)
-                ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
+                
+                #Decide whether to use residue name or coordid in title
+                if quality == 'Debug':
+                    ax.set_title(f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
+                elif quality == 'Publication':
+                    ax.set_title(f'{lambda_ref.iloc[coordid-1]["resname"]}_{lambda_ref.iloc[coordid-1]["resid"]}')
 
             else:
                 continue

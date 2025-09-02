@@ -37,32 +37,32 @@ def main():
     # MD1
 
     ## Overview lambda distributions
-    lambda_hist_md1 = plot_lambda_hist(PATH_MD1, xvg_data, coord2lambda_dict, lambda_ref)
+    lambda_hist_md1 = plot_lambda_hist(PATH_MD1, xvg_data, coord2lambda_dict, lambda_ref, quality='Publication')
     lambda_hist_md1.savefig(f"{MD1_PREFIX}_histograms.png")
     lambda_hist_md1.close()
     
 
     ## Protonation fraction time series
-    proton_ts_md1 = plot_protonation_timeseries(PATH_MD1, time_MD1, xvg_data, coord2lambda_dict, lambda_ref, npz_output=False)
+    proton_ts_md1 = plot_protonation_timeseries(PATH_MD1, time_MD1, xvg_data, coord2lambda_dict, lambda_ref, quality='Publication', npz_output=False)
     proton_ts_md1.savefig(f"{MD1_PREFIX}_timeseries.png")
     proton_ts_md1.close()
 
     # MD2
 
     # ## Overview lambda distributions
-    lambda_hist_md2 = plot_lambda_hist(PATH_MD2, xvg_data, coord2lambda_dict, lambda_ref)
+    lambda_hist_md2 = plot_lambda_hist(PATH_MD2, xvg_data, coord2lambda_dict, lambda_ref, quality='Publication')
     lambda_hist_md2.savefig(f"{MD2_PREFIX}_histograms.png")
     lambda_hist_md2.close()
 
     # ## Protonation fraction time series
-    proton_ts_md2 = plot_protonation_timeseries(PATH_MD2, time_MD2, xvg_data, coord2lambda_dict, lambda_ref, npz_output=False)
+    proton_ts_md2 = plot_protonation_timeseries(PATH_MD2, time_MD2, xvg_data, coord2lambda_dict, lambda_ref, quality='Publication', npz_output=False)
     proton_ts_md2.savefig(f"{MD2_PREFIX}_timeseries.png")
     proton_ts_md2.close()
 
     # MD1 vs MD2
 
     # ## Protonation convergence
-    proton_conv = plot_protonation_convergence(PATHS_MD, time_MDs, xvg_data, coord2lambda_dict, lambda_ref)
+    proton_conv = plot_protonation_convergence(PATHS_MD, time_MDs, xvg_data, coord2lambda_dict, lambda_ref, quality='Publication')
     proton_conv.savefig(f"{MD1_PREFIX}_{MD2_PREFIX}_convergence.png")
     proton_conv.close()
 
