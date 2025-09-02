@@ -38,7 +38,7 @@ def main():
     
 
     ## Protonation fraction time series
-    proton_ts_md1 = plot_protonation_timeseries(PATH_MD1, xvg_data, coord2lambda_dict, lambda_ref)
+    proton_ts_md1 = plot_protonation_timeseries(PATH_MD1, xvg_data, coord2lambda_dict, lambda_ref, npz_output=False)
     proton_ts_md1.savefig(f"{MD1_PREFIX}_timeseries.png")
     proton_ts_md1.close()
 
@@ -50,7 +50,7 @@ def main():
     lambda_hist_md2.close()
 
     # ## Protonation fraction time series
-    proton_ts_md2 = plot_protonation_timeseries(PATH_MD2, xvg_data, coord2lambda_dict, lambda_ref)
+    proton_ts_md2 = plot_protonation_timeseries(PATH_MD2, xvg_data, coord2lambda_dict, lambda_ref, npz_output=False)
     proton_ts_md2.savefig(f"{MD2_PREFIX}_timeseries.png")
     proton_ts_md2.close()
 
@@ -62,7 +62,7 @@ def main():
     proton_conv.close()
 
     # ## Overview protonation fractions
-    proton_frac = plot_protonation_fraction(PATHS_MD, xvg_data, lambda_ref)
+    proton_frac = plot_protonation_fraction(PATHS_MD, xvg_data, lambda_ref, npz_output=False)
     proton_frac.savefig(f"{MD1_PREFIX}_{MD2_PREFIX}_protonfraction.png")
     proton_frac.close()
 

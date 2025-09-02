@@ -41,7 +41,7 @@ def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, row
 # Show the plot
     return plt
 
-def plot_protonation_timeseries(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5):
+def plot_protonation_timeseries(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, npz_output=False):
     """"Plot protonation time-series"""
     ## Set up the grid size
     #rows = 20  # 10x10 grid for 100 plots
@@ -79,10 +79,11 @@ def plot_protonation_timeseries(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lamb
                 else:
                     res_prot_ts = get_protonation_timeseries(coordid, PATH_ANALYSIS, xvg_data)
                 
-                # Save output in npz file named after the residue
-                resname = lambda_ref.iloc[index]['resname']
-                resid = lambda_ref.iloc[index]['resid']
-                np.savez(f"{PATH_ANALYSIS}/{resname}_{resid}_protonation_timeseries.npz", res_prot_ts=res_prot_ts)
+                if npz_output:
+                    # Save output in npz file named after the residue
+                    resname = lambda_ref.iloc[index]['resname']
+                    resid = lambda_ref.iloc[index]['resid']
+                    np.savez(f"{PATH_ANALYSIS}/{resname}_{resid}_protonation_timeseries.npz", res_prot_ts=res_prot_ts)
 
                 ax.plot(res_prot_ts, label="MD1")
                 ax.set_ylim(-0.1,1.1)
@@ -167,7 +168,7 @@ def plot_protonation_convergence(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lam
     return plt
 
 
-def plot_protonation_fraction(PATH_ANALYSIS, xvg_data, lambda_ref, rows=20, cols=5):
+def plot_protonation_fraction(PATH_ANALYSIS, xvg_data, lambda_ref, rows=20, cols=5, npz_output=False):
     """Plot protonation fractions avg and se"""
     # Set up the grid size
     #rows = 20  # 10x10 grid for 100 plots
@@ -180,7 +181,11 @@ def plot_protonation_fraction(PATH_ANALYSIS, xvg_data, lambda_ref, rows=20, cols
     coordid = 1
     prv_resid = 0
 
-
+    # Create folder for npz protonation fraction files
+    if npz_output:
+        npz_dir = f"npz_protfrac"
+        if not os.path.exists(npz_dir):
+            os.makedirs(npz_dir)
 
     # Generate and plot data for each subplot
     for i in range(rows):
@@ -218,9 +223,10 @@ def plot_protonation_fraction(PATH_ANALYSIS, xvg_data, lambda_ref, rows=20, cols
                 ax.set_yticks([])
 
                 # Save output in npz file named after the residue
-                resname = lambda_ref.iloc[index]['resname']
-                resid = lambda_ref.iloc[index]['resid']
-                np.savez(f"{resname}_{resid}_protonation_fraction.npz", res_prot_avg=proton_avg, res_prot_se=proton_se)
+                if npz_output:
+                    resname = lambda_ref.iloc[index]['resname']
+                    resid = lambda_ref.iloc[index]['resid']
+                    np.savez(f"{npz_dir}/{resname}_{resid}_protonation_fraction.npz", res_prot_avg=proton_avg, res_prot_se=proton_se)
 
             else:
                 continue
