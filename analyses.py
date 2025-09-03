@@ -1,14 +1,29 @@
 import numpy as np
 import os, glob
 from typing import Dict, Tuple, List
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+
+def load_file_for_pool(filepath, analysis_dir, coord_id, num_rows):
+    data = np.empty((num_rows, 2), dtype=np.float64)
+    index = 0
+    with open(filepath, 'r') as f:
+        for line in f:
+            if line[0] in ('#', '@'):
+                continue
+            values = line.split()
+            data[index, 0] = float(values[0])
+            data[index, 1] = float(values[1])
+            index += 1
+            if index >= num_rows:
+                break
+    return (analysis_dir, coord_id, data[:index, :])
 
 class XVGData:
     """
     A class to handle the loading and processing of XVG data files from multiple directories.
     """
 
-    def __init__(self, analysis_dirs: List[str], num_rows: int = 2000000):
+    def __init__(self, analysis_dirs: List[str], num_rows: int = 2000000, num_threads: int = 2):
         """
         Initializes the XVGData object.
 
@@ -18,6 +33,7 @@ class XVGData:
         """
         self.analysis_dirs = analysis_dirs
         self.num_rows = num_rows
+        self.num_threads = num_threads
         self.data = {dir: {} for dir in analysis_dirs}
         self.load_all_data()
 
@@ -25,7 +41,8 @@ class XVGData:
         """
         Loads all XVG data from the specified directories into memory.
         """
-        with ThreadPoolExecutor() as executor:
+        #with ThreadPoolExecutor() as executor:
+        with ProcessPoolExecutor(max_workers=self.num_threads) as executor:
             futures = []
             for analysis_dir in self.analysis_dirs:
                 for coord_id in range(1, len(glob.glob(f"{analysis_dir}/*.xvg")) + 1):
@@ -33,9 +50,14 @@ class XVGData:
                     coord_xvg_path = os.path.join(analysis_dir, coord_xvg_name)
                     print(coord_xvg_path)
                     if os.path.exists(coord_xvg_path):
-                        futures.append(executor.submit(self._load_file, coord_xvg_path, analysis_dir, coord_id))
+                        #futures.append(executor.submit(self._load_file, coord_xvg_path, analysis_dir, coord_id))
+                        futures.append(executor.submit(
+                            load_file_for_pool, coord_xvg_path, analysis_dir, coord_id, self.num_rows
+                        ))
             for future in futures:
-                future.result()
+                #future.result()
+                analysis_dir, coord_id, arr = future.result()
+                self.data[analysis_dir][coord_id] = arr
 
     def _load_file(self, filepath: str, analysis_dir: str, coord_id: int):
         """

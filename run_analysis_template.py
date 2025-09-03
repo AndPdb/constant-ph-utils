@@ -27,8 +27,8 @@ def main():
     MD2_PREFIX = "MD1_2"
 
     # Create an instance of XVGData for the directories
-    xvg_data = XVGData(PATHS_MD)
-
+    xvg_data = XVGData(PATHS_MD, num_rows = 2000000, num_threads = 2)
+    #print(xvg_data.get_coord_xvg(1, PATH_MD1))
     time_MD1 = xvg_data.get_coord_xvg(1, PATH_MD1)[-1,0]  # Get last time of MD1
     time_MD2 = xvg_data.get_coord_xvg(1, PATH_MD2)[-1,0]  # Get last time of MD1
     time_MDs = min(time_MD1, time_MD2)
