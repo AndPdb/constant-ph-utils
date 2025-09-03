@@ -246,14 +246,14 @@ def plot_protonation_fraction(PATH_ANALYSIS, xvg_data, lambda_ref, rows=20, cols
                     proton_avg, deproton_avg, proton_se, deproton_se  = get_statistics(coordid, xvg_data)
 
 
-                ax.bar(['Protonated'], [proton_avg], yerr=proton_se, capsize=5, linewidth=1)
+                bars = ax.bar(['Protonated'], [proton_avg], yerr=proton_se, capsize=5, linewidth=1, edgecolor='black')
+                ax.bar_label(bars, labels=[f"{proton_avg:.2f} ± {proton_se:.2f}"])
 
-
-                ax.set_ylim(0,1)
+                ax.set_ylim(0,1.2)
                 ax.set_title(f'{lambda_ref.iloc[coordid-1]["resname"]}_{lambda_ref.iloc[coordid-1]["resid"]}')
 
+                ax.set_yticks([0,0.5,1])
                 ax.set_xticks([])
-                ax.set_yticks([])
 
                 # Save output in npz file named after the residue
                 if npz_output:
