@@ -10,9 +10,9 @@ from analyses import *
 from plot import *
 import pandas as pd
 
-RUN_TYPE = "Publication" # Debug or Publication
-PLOT_TYPE = "Publication" # Debug or Publication
-NPZ_OUTPUT = True # True or False
+RUN_TYPE = "Debug" # Debug or Publication
+PLOT_TYPE = "Debug" # Debug or Publication
+NPZ_OUTPUT = False # True or False
 
 # Path variables
 LAMBDAREF_PATH = "test"
@@ -34,9 +34,10 @@ def main():
     # Create an instance of XVGData for the directories
     xvg_data = XVGData(PATHS_MD, num_rows = 2000000, num_threads = 2)
     time_MD1 = xvg_data.get_coord_xvg(1, PATH_MD1)[-1,0]  # Get last time of MD1
-    time_MD2 = xvg_data.get_coord_xvg(1, PATH_MD2)[-1,0]  # Get last time of MD1
-    time_MDs = min(time_MD1, time_MD2)
-
+    
+    if RUN_TYPE == "Publication":
+        time_MD2 = xvg_data.get_coord_xvg(1, PATH_MD2)[-1,0]  # Get last time of MD1
+        time_MDs = min(time_MD1, time_MD2)
 
     # MD1
 
