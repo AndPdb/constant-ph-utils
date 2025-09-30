@@ -1,5 +1,5 @@
 # If you want to run this outside of the constant-ph-utils directory, uncomment the following lines
-import sys
+import sys, os
 # caution: path[0] is reserved for script path (or '' in REPL)
 sys.path.insert(1, 'constant-ph-utils/')
 
@@ -10,25 +10,23 @@ from analyses import *
 from plot import *
 import pandas as pd
 
-# Import lamdareference.dat
+LAMBDAREF_PATH = "test"
+PATH_MD1 = "test/MD1/analysis"
+PATH_MD2 = "test/MD1_2/analysis"
+PATHS_MD = [PATH_MD1, PATH_MD2]
+MD1_PREFIX = "MD1"
+MD2_PREFIX = "MD1_2"
 
 def main():
-    lambda_ref = pd.read_csv('test/lambdareference.dat', sep=r'\s+', engine='python')
+    lambda_ref = pd.read_csv(os.path.join(LAMBDAREF_PATH ,'lambdareference.dat'), sep=r'\s+', engine='python')
     
     if lambda_ref['chain'][0].endswith("xvg"):
         lambda_ref = lambda_ref.rename(columns={"chain": "coordinateFile", "coordinateFile": "chain"})
 
-    coord2lambda_dict = parse_lambda_reference('test/lambdareference.dat')
-
-    PATH_MD1 = "test/MD1/analysis"
-    PATH_MD2 = "test/MD1_2/analysis"
-    PATHS_MD = [PATH_MD1, PATH_MD2]
-    MD1_PREFIX = "MD1"
-    MD2_PREFIX = "MD1_2"
+    coord2lambda_dict = parse_lambda_reference(os.path.join(LAMBDAREF_PATH ,'lambdareference.dat'))
 
     # Create an instance of XVGData for the directories
     xvg_data = XVGData(PATHS_MD, num_rows = 2000000, num_threads = 2)
-    #print(xvg_data.get_coord_xvg(1, PATH_MD1))
     time_MD1 = xvg_data.get_coord_xvg(1, PATH_MD1)[-1,0]  # Get last time of MD1
     time_MD2 = xvg_data.get_coord_xvg(1, PATH_MD2)[-1,0]  # Get last time of MD1
     time_MDs = min(time_MD1, time_MD2)
