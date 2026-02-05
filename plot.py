@@ -168,23 +168,15 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data, coord2lambda_dic
                         coordids = [coordid, coordid+1, coordid+2]
 
                         for path_md in PATH_ANALYSIS:
-                            # res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[0], xvg_data)
-                            # res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[1], xvg_data)
                             list_residues.append(get_histidine_protonation_timeseries(
                                 coordids, path_md, xvg_data))
 
                         prv_resid = lambda_ref.iloc[index]['resid']
                     else:
-                        # res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[0], xvg_data)
-                        # res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[1], xvg_data)
                         for path_md in PATH_ANALYSIS:
-                            # res_prot_ts1 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[0], xvg_data)
-                            # res_prot_ts2 = get_histidine_protonation_timeseries(coordids, PATH_ANALYSIS[1], xvg_data)
                             list_residues.append(get_histidine_protonation_timeseries(
                                 coordids, path_md, xvg_data))
                 else:
-                    # res_prot_ts1 = get_protonation_timeseries(coordid, PATH_ANALYSIS[0], xvg_data)
-                    # res_prot_ts2 = get_protonation_timeseries(coordid, PATH_ANALYSIS[1], xvg_data)
                     for path_md in PATH_ANALYSIS:
                         list_residues.append(get_protonation_timeseries(
                             coordid, path_md, xvg_data))
