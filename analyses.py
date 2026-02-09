@@ -26,24 +26,9 @@ def load_file_for_pool(filepath: str, coord_id: int, num_rows: int) -> Tuple[int
 @dataclass
 class XVGData:
     """
-    A class to handle the loading and processing of XVG data files from multiple directories.
+    A class to handle the loading and processing of XVG data files.
     """
 
-    # def __init__(self, analysis_dir: str, lambda_ref: pd.DataFrame, num_rows: int = 2000000, num_threads: int = 2):
-    #     """
-    #     Initializes the XVGData object.
-
-    #     Args:
-    #         analysis_dir (str): Directory containing the XVG files.
-    #         lambda_ref (pd.DataFrame): DataFrame containing lambda reference values.
-    #         num_rows (int): Maximum number of rows to read from each XVG file.
-    #     """
-    #     self.analysis_dir = analysis_dir
-    #     self.lambda_ref = lambda_ref
-    #     self.num_rows = num_rows
-    #     self.num_threads = num_threads
-    #     self.data = {}
-    #     self.load_all_data()
     analysis_dir: str
     num_rows: int
     num_threads: int
@@ -79,10 +64,16 @@ class XVGData:
                 coord_id, arr = future.result()
                 self.data[coord_id] = arr
 
-    # def get_coord_xvg(self, coord_id: int) -> np.ndarray:
-    #     return self.data[coord_id]
     def __getitem__(self, coord_id: int) -> np.ndarray:
         return self.data[coord_id]
+
+    def __len__(self) -> int:
+        """Returns the number of loaded coordinate files."""
+        return len(self.data)
+
+    def __contains__(self, coord_id: int) -> bool:
+        """Check if a coordinate ID exists in the loaded data."""
+        return coord_id in self.data
 
 
 def calculate_fractions(array_xvg: np.ndarray) -> Tuple[float, float]:
@@ -99,7 +90,7 @@ def calculate_fractions(array_xvg: np.ndarray) -> Tuple[float, float]:
     # Handle the case where there are no protonated or deprotonated frames
     if total == 0:
         return 0.0, 0.0
-    
+
     # Calculate fractions
     prot_frac = prot.sum() / total
     deprot_frac = deprot.sum() / total
@@ -273,9 +264,9 @@ def parse_lambda_reference(lambda_reference_path: str) -> Dict[int, int]:
     return coord_to_lambda
 
 
-def resid2coordid(resid: int, lambda_ref: Dict[int, int]) -> int:
+def resid2coordid(resid: int, lambda_ref: pd.DataFrame) -> int:
     """
-    Converts a residue ID to a coordinate ID using the lambda reference dictionary.
+    Converts a residue ID to a coordinate ID using the lambda reference DataFrame.
     """
 
     # Extract the row where 'resid' is 75
