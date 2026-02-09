@@ -1,11 +1,13 @@
+from dataclasses import dataclass, field
 import numpy as np
+import pandas as pd
 import os
 import glob
 from typing import Dict, Tuple, List
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 
-def load_file_for_pool(filepath, analysis_dir, coord_id, num_rows):
+def load_file_for_pool(filepath: str, coord_id: int, num_rows: int) -> Tuple[int, np.ndarray]:
     data = np.empty((num_rows, 2), dtype=np.float64)
     index = 0
     with open(filepath, 'r') as f:
@@ -18,26 +20,37 @@ def load_file_for_pool(filepath, analysis_dir, coord_id, num_rows):
             index += 1
             if index >= num_rows:
                 break
-    return (analysis_dir, coord_id, data[:index, :])
+    return (coord_id, data[:index, :])
 
 
+@dataclass
 class XVGData:
     """
     A class to handle the loading and processing of XVG data files from multiple directories.
     """
 
-    def __init__(self, analysis_dirs: List[str], num_rows: int = 2000000, num_threads: int = 2):
-        """
-        Initializes the XVGData object.
+    # def __init__(self, analysis_dir: str, lambda_ref: pd.DataFrame, num_rows: int = 2000000, num_threads: int = 2):
+    #     """
+    #     Initializes the XVGData object.
 
-        Args:
-            analysis_dirs (List[str]): List of directories containing the XVG files.
-            num_rows (int): Maximum number of rows to read from each XVG file.
-        """
-        self.analysis_dirs = analysis_dirs
-        self.num_rows = num_rows
-        self.num_threads = num_threads
-        self.data = {dir: {} for dir in analysis_dirs}
+    #     Args:
+    #         analysis_dir (str): Directory containing the XVG files.
+    #         lambda_ref (pd.DataFrame): DataFrame containing lambda reference values.
+    #         num_rows (int): Maximum number of rows to read from each XVG file.
+    #     """
+    #     self.analysis_dir = analysis_dir
+    #     self.lambda_ref = lambda_ref
+    #     self.num_rows = num_rows
+    #     self.num_threads = num_threads
+    #     self.data = {}
+    #     self.load_all_data()
+    analysis_dir: str
+    num_rows: int
+    num_threads: int
+    data: Dict[int, np.ndarray] = field(default_factory=dict)
+
+    def __post_init__(self):
+        # safe place to call the loader after the instance exists
         self.load_all_data()
 
     def load_all_data(self):
@@ -45,56 +58,31 @@ class XVGData:
         Loads all XVG data from the specified directories into memory.
         """
         with ProcessPoolExecutor(max_workers=self.num_threads) as executor:
-            futures = []
-            for analysis_dir in self.analysis_dirs:
-                for coord_id in range(1, len(glob.glob(f"{analysis_dir}/*.xvg")) + 1):
-                    coord_xvg_name = f"cphmd-coord-{coord_id}.xvg"
-                    coord_xvg_path = os.path.join(analysis_dir, coord_xvg_name)
-                    print(coord_xvg_path)
-                    if os.path.exists(coord_xvg_path):
-                        futures.append(executor.submit(
-                            load_file_for_pool, coord_xvg_path, analysis_dir, coord_id, self.num_rows
-                        ))
-            for future in futures:
-                analysis_dir, coord_id, arr = future.result()
-                self.data[analysis_dir][coord_id] = arr
+            futures_dict = {}
 
-    def _load_file(self, filepath: str, analysis_dir: str, coord_id: int):
-        """
-        Helper function to load a single XVG file.
-        """
-        self.data[analysis_dir][coord_id] = self.fast_read_numpy_array(
-            filepath)
+            xvg_files = glob.glob(f"{self.analysis_dir}/*.xvg")
+            # for analysis_dir in self.analysis_dirs:
+            for coord_id in range(1, len(xvg_files) + 1):
+                coord_xvg_name = f"cphmd-coord-{coord_id}.xvg"
+                coord_xvg_path = os.path.join(
+                    self.analysis_dir, coord_xvg_name)
+                print(coord_xvg_path)
 
-    def fast_read_numpy_array(self, filename: str) -> np.ndarray:
-        """
-        Reads an XVG file into a NumPy array, skipping comment lines.
+                if os.path.exists(coord_xvg_path):
+                    future = executor.submit(
+                        load_file_for_pool, coord_xvg_path, coord_id, self.num_rows
+                    )
+                    futures_dict[future] = coord_id
 
-        Args:
-            filename (str): Path to the XVG file.
+            # Process results as they complete
+            for future in as_completed(futures_dict):
+                coord_id, arr = future.result()
+                self.data[coord_id] = arr
 
-        Returns:
-            np.ndarray: Array containing the data from the XVG file.
-        """
-        data = np.empty((self.num_rows, 2),
-                        dtype=np.float64)  # Preallocate array
-        index = 0  # Keep track of valid data row index
-
-        with open(filename, 'r') as f:
-            for line in f:
-                if line[0] in ('#', '@'):  # Skip comments
-                    continue
-                values = line.split()
-                data[index, 0] = float(values[0])
-                data[index, 1] = float(values[1])
-                index += 1
-                if index >= self.num_rows:  # Prevent overflow
-                    break
-
-        return data[:index, :]
-
-    def get_coord_xvg(self, coord_id: int, analysis_dir: str) -> np.ndarray:
-        return self.data[analysis_dir].get(coord_id, np.array([]))
+    # def get_coord_xvg(self, coord_id: int) -> np.ndarray:
+    #     return self.data[coord_id]
+    def __getitem__(self, coord_id: int) -> np.ndarray:
+        return self.data[coord_id]
 
 
 def calculate_fractions(array_xvg: np.ndarray) -> Tuple[float, float]:
@@ -104,18 +92,21 @@ def calculate_fractions(array_xvg: np.ndarray) -> Tuple[float, float]:
     # Identify protonated and deprotonated states based on a threshold
     prot = array_xvg[:, 1] < 0.2
     deprot = array_xvg[:, 1] > 0.8
+
     # Calculate total number of frames in protonated or deprotonated states
     total = prot.sum() + deprot.sum()
+
     # Handle the case where there are no protonated or deprotonated frames
     if total == 0:
         return 0.0, 0.0
+    
     # Calculate fractions
     prot_frac = prot.sum() / total
     deprot_frac = deprot.sum() / total
     return prot_frac, deprot_frac
 
 
-def get_statistics(coord_id: int, xvg_data: XVGData) -> Tuple[float, float, float, float]:
+def get_statistics(coord_id: int, xvg_data_list: List[XVGData]) -> Tuple[float, float, float, float]:
     """
     Reads XVG files from replicas and computes statistics on protonation fractions.
     Returns averages and standard errors for protonation and deprotonation.
@@ -124,8 +115,8 @@ def get_statistics(coord_id: int, xvg_data: XVGData) -> Tuple[float, float, floa
     prot_fractions = []
     deprot_fractions = []
     # Iterate over directories (replicas)
-    for analysis_dir in xvg_data.analysis_dirs:
-        array_xvg = xvg_data.get_coord_xvg(coord_id, analysis_dir)
+    for xvg_data in xvg_data_list:
+        array_xvg = xvg_data[coord_id]
         if array_xvg.size > 0:
             prot_frac, deprot_frac = calculate_fractions(array_xvg)
             prot_fractions.append(prot_frac)
@@ -140,12 +131,40 @@ def get_statistics(coord_id: int, xvg_data: XVGData) -> Tuple[float, float, floa
     return prot_avg, deprot_avg, prot_se, deprot_se
 
 
-def get_protonation_timeseries(coord_id: int, analysis_dir: str, xvg_data: XVGData) -> np.ndarray:
+# def get_multichain_statistics(coord_id: int, xvg_data: XVGData) -> Tuple[float, float, float, float]:
+#     """
+#     Reads XVG files from replicas and computes statistics on protonation fractions.
+#     Returns averages and standard errors for protonation and deprotonation.
+#     """
+#     # Initialize lists to store fractions from different replicas
+#     prot_fractions = []
+#     deprot_fractions = []
+
+#     # Iterate over directories (replicas)
+#     for analysis_dir in xvg_data.analysis_dirs:
+#         for chain_id in chains:
+#             array_xvg = xvg_data.get_coord_xvg(coord_id, analysis_dir)
+#             if array_xvg.size > 0:
+#                 prot_frac, deprot_frac = calculate_fractions(array_xvg)
+#                 prot_fractions.append(prot_frac)
+#                 deprot_fractions.append(deprot_frac)
+
+#     # Calculate average and standard error for protonation and deprotonation
+#     prot_avg = np.mean(prot_fractions)
+#     deprot_avg = np.mean(deprot_fractions)
+#     # ddof=1 use N-1 in the denominator
+#     prot_se = np.std(prot_fractions, ddof=1) / np.sqrt(len(prot_fractions))
+#     deprot_se = np.std(deprot_fractions, ddof=1) / \
+#         np.sqrt(len(deprot_fractions))
+#     return prot_avg, deprot_avg, prot_se, deprot_se
+
+
+def get_protonation_timeseries(coord_id: int, xvg_data: XVGData) -> np.ndarray:
     """
     Computes the protonation fraction time series for the given coord_id.
     """
     # Read the XVG data
-    array_xvg = xvg_data.get_coord_xvg(coord_id, analysis_dir)
+    array_xvg = xvg_data[coord_id]
     # Identify protonated and deprotonated states
     prot = array_xvg[:, 1] < 0.2
     deprot = array_xvg[:, 1] > 0.8
@@ -178,17 +197,16 @@ def calculate_histidine_fractions(array_xvgs: List[np.ndarray]) -> float:
     return prot_frac
 
 
-def get_histidine_statistics(coord_ids: List[int], xvg_data: XVGData) -> Tuple[float, float]:
+def get_histidine_statistics(coord_ids: List[int], xvg_data_list: List[XVGData]) -> Tuple[float, float]:
     """
     Reads XVG files for histidines and computes statistics on protonation fractions.
     """
     # Initialize a list to store protonation fractions
     prot_fractions = []
     # Iterate over directories (replicas)
-    for analysis_dir in xvg_data.analysis_dirs:
+    for xvg_data in xvg_data_list:
         # Read XVG data for each histidine coordinate
-        histidine_data = [xvg_data.get_coord_xvg(
-            coord_id, analysis_dir) for coord_id in coord_ids]
+        histidine_data = [xvg_data[coord_id] for coord_id in coord_ids]
         # Calculate the protonation fraction for this replica
         prot_frac = calculate_histidine_fractions(histidine_data)
         prot_fractions.append(prot_frac)
@@ -198,7 +216,7 @@ def get_histidine_statistics(coord_ids: List[int], xvg_data: XVGData) -> Tuple[f
     return prot_avg, prot_se
 
 
-def get_histidine_protonation_timeseries(coord_ids: List[int], analysis_dir: str, xvg_data: XVGData) -> np.ndarray:
+def get_histidine_protonation_timeseries(coord_ids: List[int], xvg_data: XVGData) -> np.ndarray:
     """
     Computes the time series of protonation fractions for histidines.
 
@@ -211,8 +229,7 @@ def get_histidine_protonation_timeseries(coord_ids: List[int], analysis_dir: str
     """
 
     # Read XVG data for each histidine coordinate
-    xvg_his_dict = {cid: xvg_data.get_coord_xvg(
-        cid, analysis_dir) for cid in coord_ids}
+    xvg_his_dict = {cid: xvg_data[cid] for cid in coord_ids}
 
     # Identify protonated and deprotonated states for each time step
     # If the first coordinate (HSP) is > 0.8, it's protonated
