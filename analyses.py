@@ -213,7 +213,7 @@ def get_histidine_protonation_timeseries(coord_ids: List[int], xvg_data: XVGData
 
     Args:
         coord_ids: A list of coordinate IDs for the histidine residues.
-        analysis_dir: The directory containing the XVG files.
+        xvg_data: The XVGData object containing the XVG data.
 
     Returns:
         A NumPy array representing the protonation fraction time series for the histidine residue.

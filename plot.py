@@ -298,12 +298,12 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref, rows=20,
 
 def single_residue_convergence(coordid, xvg_data_list: List[XVGData], lambda_ref, title="Constant-pH MD"):
     """THIS WORKS ONLY FOR NON HISTIDINES! Plot convergence of single residue. Just two replicas supported - add res_fracX if more."""
-    
+
     res_fractions = []
-    
+
     for xvg_data in xvg_data_list:
         res_fractions.append(get_protonation_timeseries(coordid, xvg_data))
-    #res_frac2 = get_protonation_timeseries(coordid, PATH_ANALYSIS[1], xvg_data)
+    # res_frac2 = get_protonation_timeseries(coordid, PATH_ANALYSIS[1], xvg_data)
 
     min_length = min(map(len, res_fractions))
 
