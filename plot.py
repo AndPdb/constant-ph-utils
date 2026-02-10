@@ -3,7 +3,7 @@ from analyses import *
 import copy 
 
 
-def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug'):
+def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug'):
     """Plot histogram of lambda values"""
     # Set up the grid size
     # Create a figure with subplots
@@ -18,7 +18,7 @@ def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, row
 
     # Generate and plot data for each subplot
     if quality == 'Debug':
-        fig.suptitle(PATH_ANALYSIS, fontsize=16, y=0.995)  # Moved suptitle up
+        fig.suptitle(xvg_data.analysis_dir, fontsize=16, y=0.995)  # Moved suptitle up
     elif quality == 'Publication':
         fig.suptitle("Lambda distributions", fontsize=16,
                      y=0.995)  # Moved suptitle up
@@ -56,7 +56,7 @@ def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, row
     return plt
 
 
-def plot_protonation_timeseries(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug', npz_output=False):
+def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug', npz_output=False):
     """"Plot protonation time-series"""
     # Set up the grid size
     # Create a figure with subplots
@@ -71,7 +71,7 @@ def plot_protonation_timeseries(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict
 
     # Generate and plot data for each subplot
     if quality == 'Debug':
-        fig.suptitle(PATH_ANALYSIS, fontsize=16, y=0.995)  # Moved suptitle up
+        fig.suptitle(xvg_data.analysis_dir, fontsize=16, y=0.995)  # Moved suptitle up
     elif quality == 'Publication':
         fig.suptitle("Protonation time-series", fontsize=16,
                      y=0.995)  # Moved suptitle up
@@ -109,7 +109,7 @@ def plot_protonation_timeseries(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict
                     resname = lambda_ref.iloc[index]['resname']
                     resid = lambda_ref.iloc[index]['resid']
                     np.savez(
-                        f"{PATH_ANALYSIS}/{resname}_{resid}_protonation_timeseries.npz", res_prot_ts=res_prot_ts)
+                        f"{xvg_data.analysis_dir}/{resname}_{resid}_protonation_timeseries.npz", res_prot_ts=res_prot_ts)
 
                 ax.plot(res_prot_ts, label="MD1")
                 ax.set_ylim(-0.1, 1.1)
