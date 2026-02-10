@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from analyses import *
+import copy 
 
 
 def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug'):
@@ -8,8 +9,11 @@ def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, row
     # Create a figure with subplots
     # Adjusted figure size for 5x20 layout
     fig, axes = plt.subplots(rows, cols, figsize=(15, 40))
-
-    coordid = 1
+    #print(xvg_data.coordids)
+    coordid = xvg_data.coordids[0]
+    #print(coordid)
+    index_coordid = copy.deepcopy(xvg_data.coordids[0])  # Create a copy of the coordid list to iterate through
+    #coordid = 1
     prv_resid = 0
 
     # Generate and plot data for each subplot
@@ -24,9 +28,10 @@ def plot_lambda_hist(PATH_ANALYSIS, xvg_data, coord2lambda_dict, lambda_ref, row
 
     for i in range(rows):
         for j in range(cols):
-            index = coordid-1
+            index = coordid - index_coordid
+            #print(index)
 
-            if index < lambda_ref.shape[0]:
+            if index < len(xvg_data.coordids):
                 ax = axes[i, j]
                 data = xvg_data[coordid]
                 ax.hist(data[:, 1], bins=500)
@@ -58,7 +63,10 @@ def plot_protonation_timeseries(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict
     # Adjusted figure size for 5x20 layout
     fig, axes = plt.subplots(rows, cols, figsize=(15, 40))
 
-    coordid = 1
+    coordid = xvg_data.coordids[0]
+    #print(coordid)
+    index_coordid = copy.deepcopy(xvg_data.coordids[0])
+    #coordid = 1
     prv_resid = 0
 
     # Generate and plot data for each subplot
@@ -73,9 +81,9 @@ def plot_protonation_timeseries(PATH_ANALYSIS, time, xvg_data, coord2lambda_dict
 
     for i in range(rows):
         for j in range(cols):
-            index = coordid-1
+            index = coordid - index_coordid
 
-            if index < lambda_ref.shape[0]:
+            if index < len(xvg_data.coordids):
                 ax = axes[i, j]
 
                 if lambda_ref.iloc[index]['resname'] == "HSPT":  # If histidine
