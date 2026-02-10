@@ -30,7 +30,7 @@ class XVGData:
     """
 
     analysis_dir: str = field(default_factory=str)
-    coordids : List[int] = field(default_factory=list)
+    coordids: List[int] = field(default_factory=list)
     num_rows: int = field(default_factory=2000000)
     num_threads: int = field(default_factory=2)
     data: Dict[int, np.ndarray] = field(default_factory=dict)
@@ -46,9 +46,9 @@ class XVGData:
         with ProcessPoolExecutor(max_workers=self.num_threads) as executor:
             futures_dict = {}
 
-            #xvg_files = glob.glob(f"{self.analysis_dir}/*.xvg")
+            # xvg_files = glob.glob(f"{self.analysis_dir}/*.xvg")
             # for analysis_dir in self.analysis_dirs:
-            #for coord_id in range(1, len(xvg_files) + 1):
+            # for coord_id in range(1, len(xvg_files) + 1):
             for coord_id in self.coordids:
                 coord_xvg_name = f"cphmd-coord-{coord_id}.xvg"
                 coord_xvg_path = os.path.join(
@@ -69,23 +69,23 @@ class XVGData:
     def __getitem__(self, coord_id: int | slice | tuple):
 
         if isinstance(coord_id, tuple):
-            #coord_id = (row_index, col_id)
+            # coord_id = (row_index, col_id)
             row_index, col_id = coord_id
             column_data = self.data[col_id]
-            return column_data[row_index] 
-        
+            return column_data[row_index]
+
         elif isinstance(coord_id, slice):
             # Handle slicing
             start, stop, step = coord_id.indices(len(self.data))
             return [self.data[i] for i in range(start, stop, step)]
-        
+
         elif isinstance(coord_id, int):
             # Handle single integer index
             return self.data[coord_id]
-        
+
         else:
             raise TypeError(f"Invalid argument type: {type(coord_id)}")
-    
+
     def __len__(self) -> int:
         """Returns the number of loaded coordinate files."""
         return len(self.data)
@@ -116,7 +116,7 @@ def calculate_fractions(array_xvg: np.ndarray) -> Tuple[float, float]:
     return prot_frac, deprot_frac
 
 
-def get_statistics(coord_id: int, xvg_data_list: List[XVGData]) -> Tuple[float, float, float, float]:
+def get_statistics(coord_id: int, xvg_data_list: List[XVGData], chain_mapping={}) -> Tuple[float, float, float, float]:
     """
     Reads XVG files from replicas and computes statistics on protonation fractions.
     Returns averages and standard errors for protonation and deprotonation.
@@ -126,7 +126,11 @@ def get_statistics(coord_id: int, xvg_data_list: List[XVGData]) -> Tuple[float, 
     deprot_fractions = []
     # Iterate over directories (replicas)
     for xvg_data in xvg_data_list:
-        array_xvg = xvg_data[coord_id]
+        try:
+            array_xvg = xvg_data[coord_id]
+        except KeyError:
+            # If the coordinate is missing in this replica, skip it
+            array_xvg = xvg_data[chain_mapping[coord_id]]
         if array_xvg.size > 0:
             prot_frac, deprot_frac = calculate_fractions(array_xvg)
             prot_fractions.append(prot_frac)
@@ -169,12 +173,16 @@ def get_statistics(coord_id: int, xvg_data_list: List[XVGData]) -> Tuple[float, 
 #     return prot_avg, deprot_avg, prot_se, deprot_se
 
 
-def get_protonation_timeseries(coord_id: int, xvg_data: XVGData) -> np.ndarray:
+def get_protonation_timeseries(coord_id: int, xvg_data: XVGData, chain_mapping={}) -> np.ndarray:
     """
     Computes the protonation fraction time series for the given coord_id.
     """
     # Read the XVG data
-    array_xvg = xvg_data[coord_id]
+    try:
+        array_xvg = xvg_data[coord_id]
+    except KeyError:
+        # If the coordinate is missing in this replica, return an empty array
+        array_xvg = xvg_data[chain_mapping[coord_id]]
     # Identify protonated and deprotonated states
     prot = array_xvg[:, 1] < 0.2
     deprot = array_xvg[:, 1] > 0.8
@@ -207,7 +215,7 @@ def calculate_histidine_fractions(array_xvgs: List[np.ndarray]) -> float:
     return prot_frac
 
 
-def get_histidine_statistics(coord_ids: List[int], xvg_data_list: List[XVGData]) -> Tuple[float, float]:
+def get_histidine_statistics(coord_ids: List[int], xvg_data_list: List[XVGData], chain_mapping={}) -> Tuple[float, float]:
     """
     Reads XVG files for histidines and computes statistics on protonation fractions.
     """
@@ -216,7 +224,12 @@ def get_histidine_statistics(coord_ids: List[int], xvg_data_list: List[XVGData])
     # Iterate over directories (replicas)
     for xvg_data in xvg_data_list:
         # Read XVG data for each histidine coordinate
-        histidine_data = [xvg_data[coord_id] for coord_id in coord_ids]
+        try:
+            histidine_data = [xvg_data[coord_id] for coord_id in coord_ids]
+        except KeyError:
+            # If any coordinate is missing, skip this replica
+            histidine_data = [xvg_data[chain_mapping[coord_id]]
+                              for coord_id in coord_ids]
         # Calculate the protonation fraction for this replica
         prot_frac = calculate_histidine_fractions(histidine_data)
         prot_fractions.append(prot_frac)
@@ -226,7 +239,7 @@ def get_histidine_statistics(coord_ids: List[int], xvg_data_list: List[XVGData])
     return prot_avg, prot_se
 
 
-def get_histidine_protonation_timeseries(coord_ids: List[int], xvg_data: XVGData) -> np.ndarray:
+def get_histidine_protonation_timeseries(coord_ids: List[int], xvg_data: XVGData, chain_mapping={}) -> np.ndarray:
     """
     Computes the time series of protonation fractions for histidines.
 
@@ -239,7 +252,11 @@ def get_histidine_protonation_timeseries(coord_ids: List[int], xvg_data: XVGData
     """
 
     # Read XVG data for each histidine coordinate
-    xvg_his_dict = {cid: xvg_data[cid] for cid in coord_ids}
+    try:
+        xvg_his_dict = {cid: xvg_data[cid] for cid in coord_ids}
+    except KeyError:
+        coord_ids = [chain_mapping[cid] for cid in coord_ids]
+        xvg_his_dict = {cid: xvg_data[cid] for cid in coord_ids}
 
     # Identify protonated and deprotonated states for each time step
     # If the first coordinate (HSP) is > 0.8, it's protonated

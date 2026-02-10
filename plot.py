@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from analyses import *
-import copy 
+import copy
 
 
 def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug'):
@@ -9,16 +9,18 @@ def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, q
     # Create a figure with subplots
     # Adjusted figure size for 5x20 layout
     fig, axes = plt.subplots(rows, cols, figsize=(15, 40))
-    #print(xvg_data.coordids)
+    # print(xvg_data.coordids)
     coordid = xvg_data.coordids[0]
-    #print(coordid)
-    index_coordid = copy.deepcopy(xvg_data.coordids[0])  # Create a copy of the coordid list to iterate through
-    #coordid = 1
+    # print(coordid)
+    # Create a copy of the coordid list to iterate through
+    index_coordid = copy.deepcopy(xvg_data.coordids[0])
+    # coordid = 1
     prv_resid = 0
 
     # Generate and plot data for each subplot
     if quality == 'Debug':
-        fig.suptitle(xvg_data.analysis_dir, fontsize=16, y=0.995)  # Moved suptitle up
+        fig.suptitle(xvg_data.analysis_dir, fontsize=16,
+                     y=0.995)  # Moved suptitle up
     elif quality == 'Publication':
         fig.suptitle("Lambda distributions", fontsize=16,
                      y=0.995)  # Moved suptitle up
@@ -29,7 +31,7 @@ def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, q
     for i in range(rows):
         for j in range(cols):
             index = coordid - index_coordid
-            #print(index)
+            # print(index)
 
             if index < len(xvg_data.coordids):
                 ax = axes[i, j]
@@ -64,14 +66,15 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
     fig, axes = plt.subplots(rows, cols, figsize=(15, 40))
 
     coordid = xvg_data.coordids[0]
-    #print(coordid)
+    # print(coordid)
     index_coordid = copy.deepcopy(xvg_data.coordids[0])
-    #coordid = 1
+    # coordid = 1
     prv_resid = 0
 
     # Generate and plot data for each subplot
     if quality == 'Debug':
-        fig.suptitle(xvg_data.analysis_dir, fontsize=16, y=0.995)  # Moved suptitle up
+        fig.suptitle(xvg_data.analysis_dir, fontsize=16,
+                     y=0.995)  # Moved suptitle up
     elif quality == 'Publication':
         fig.suptitle("Protonation time-series", fontsize=16,
                      y=0.995)  # Moved suptitle up
@@ -140,13 +143,13 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
     return plt
 
 
-def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGData], coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug'):
+def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGData], coord2lambda_dict, lambda_ref, chain_mapping={}, rows=20, cols=5, quality='Debug'):
     """Plot protonation avg and standard error time-series. Just two replicas supported - add get_protfrac_ts if more than 2"""
     # Set up the grid size
     # Create a figure with subplots
     # Adjusted figure size for 5x20 layout
     fig, axes = plt.subplots(rows, cols, figsize=(15, 40))
-
+    dimensions = len(xvg_data_list[0].coordids)
     coordid = 1
     prv_resid = 0
 
@@ -159,6 +162,10 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
 
     # Adjust layout to leave space for suptitle
     fig.tight_layout(rect=[0, 0, 1, 0.99], pad=2.0)
+    length = round(time/10000)*10000
+    xticks = np.arange(0, length, length/3)
+    xticks = np.round(xticks/10000)*10000
+    xticks = np.concatenate((xticks, [length]))
 
     for i in range(rows):
         for j in range(cols):
@@ -166,7 +173,7 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
 
             index = coordid-1
 
-            if index < lambda_ref.shape[0]:
+            if index < dimensions:
                 ax = axes[i, j]
 
                 if lambda_ref.iloc[index]['resname'] == "HSPT":  # If histidine
@@ -177,17 +184,17 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
 
                         for xvg_data in xvg_data_list:
                             list_residues.append(get_histidine_protonation_timeseries(
-                                coordids, xvg_data))
+                                coordids, xvg_data, chain_mapping))
 
                         prv_resid = lambda_ref.iloc[index]['resid']
                     else:
                         for xvg_data in xvg_data_list:
                             list_residues.append(get_histidine_protonation_timeseries(
-                                coordids, xvg_data))
+                                coordids, xvg_data, chain_mapping))
                 else:
                     for xvg_data in xvg_data_list:
                         list_residues.append(get_protonation_timeseries(
-                            coordid, xvg_data))
+                            coordid, xvg_data, chain_mapping))
 
                 # min_length = min(len(res_prot_ts1), len(res_prot_ts2))
                 min_length = min(map(len, list_residues))
@@ -200,10 +207,7 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
                     total_protarray, axis=0) - total_protonse, np.mean(total_protarray, axis=0) + total_protonse, alpha=0.5)
 
                 # Set xticks and labels aaccording to the simulation time
-                length = round(time/10000)*10000
-                xticks = np.arange(0, length, length/3)
-                xticks = np.round(xticks/10000)*10000
-                xticks = np.concatenate((xticks, [length]))
+
                 ax.set_xticks(xticks.astype(int))
                 ax.set_xticklabels((xticks/1000).astype(int))
 
@@ -228,7 +232,7 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
     return plt
 
 
-def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref, rows=20, cols=5, npz_output=False):
+def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref, chain_mapping={}, rows=20, cols=5, npz_output=False):
     """Plot protonation fractions avg and se"""
     # Set up the grid size
     # Create a figure with subplots
@@ -236,6 +240,7 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref, rows=20,
     fig, axes = plt.subplots(rows, cols, figsize=(15, 40))
     fig.tight_layout(pad=2.0)  # Optional: adjust padding between plots
 
+    dimensions = len(xvg_data_list[0].coordids)
     coordid = 1
     prv_resid = 0
 
@@ -250,7 +255,7 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref, rows=20,
         for j in range(cols):
             index = coordid-1
 
-            if index < lambda_ref.shape[0]:
+            if index < dimensions:
                 ax = axes[i, j]
 
                 # Generate some data; here, we're using sine waves with different frequencies
@@ -262,16 +267,16 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref, rows=20,
                         coordids = [coordid, coordid+1, coordid+2]
 
                         proton_avg, proton_se = get_histidine_statistics(
-                            coordids, xvg_data_list)
+                            coordids, xvg_data_list, chain_mapping)
 
                         prv_resid = lambda_ref.iloc[index]['resid']
                     else:
                         proton_avg, proton_se = get_histidine_statistics(
-                            coordids, xvg_data_list)
+                            coordids, xvg_data_list, chain_mapping)
 
                 else:
                     proton_avg, deproton_avg, proton_se, deproton_se = get_statistics(
-                        coordid, xvg_data_list)
+                        coordid, xvg_data_list, chain_mapping)
 
                 bars = ax.bar(['Protonated'], [proton_avg], yerr=proton_se,
                               capsize=5, linewidth=1, edgecolor='black')
@@ -304,14 +309,14 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref, rows=20,
     return plt
 
 
-def single_residue_convergence(coordid, xvg_data_list: List[XVGData], lambda_ref, title="Constant-pH MD"):
+def single_residue_convergence(coordid, xvg_data_list: List[XVGData], lambda_ref, chain_mapping={}, title="Constant-pH MD"):
     """THIS WORKS ONLY FOR NON HISTIDINES! Plot convergence of single residue. Just two replicas supported - add res_fracX if more."""
 
     res_fractions = []
 
     for xvg_data in xvg_data_list:
-        res_fractions.append(get_protonation_timeseries(coordid, xvg_data))
-    # res_frac2 = get_protonation_timeseries(coordid, PATH_ANALYSIS[1], xvg_data)
+        res_fractions.append(get_protonation_timeseries(
+            coordid, xvg_data, chain_mapping=chain_mapping))
 
     min_length = min(map(len, res_fractions))
 
