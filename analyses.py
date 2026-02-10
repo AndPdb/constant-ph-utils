@@ -29,9 +29,10 @@ class XVGData:
     A class to handle the loading and processing of XVG data files.
     """
 
-    analysis_dir: str
-    num_rows: int
-    num_threads: int
+    analysis_dir: str = field(default_factory=str)
+    coordids : List[int] = field(default_factory=list)
+    num_rows: int = field(default_factory=2000000)
+    num_threads: int = field(default_factory=2)
     data: Dict[int, np.ndarray] = field(default_factory=dict)
 
     def __post_init__(self):
@@ -45,9 +46,10 @@ class XVGData:
         with ProcessPoolExecutor(max_workers=self.num_threads) as executor:
             futures_dict = {}
 
-            xvg_files = glob.glob(f"{self.analysis_dir}/*.xvg")
+            #xvg_files = glob.glob(f"{self.analysis_dir}/*.xvg")
             # for analysis_dir in self.analysis_dirs:
-            for coord_id in range(1, len(xvg_files) + 1):
+            #for coord_id in range(1, len(xvg_files) + 1):
+            for coord_id in self.coordids:
                 coord_xvg_name = f"cphmd-coord-{coord_id}.xvg"
                 coord_xvg_path = os.path.join(
                     self.analysis_dir, coord_xvg_name)
@@ -64,9 +66,26 @@ class XVGData:
                 coord_id, arr = future.result()
                 self.data[coord_id] = arr
 
-    def __getitem__(self, coord_id: int) -> np.ndarray:
-        return self.data[coord_id]
+    def __getitem__(self, coord_id: int | slice | tuple):
 
+        if isinstance(coord_id, tuple):
+            #coord_id = (row_index, col_id)
+            row_index, col_id = coord_id
+            column_data = self.data[col_id]
+            return column_data[row_index] 
+        
+        elif isinstance(coord_id, slice):
+            # Handle slicing
+            start, stop, step = coord_id.indices(len(self.data))
+            return [self.data[i] for i in range(start, stop, step)]
+        
+        elif isinstance(coord_id, int):
+            # Handle single integer index
+            return self.data[coord_id]
+        
+        else:
+            raise TypeError(f"Invalid argument type: {type(coord_id)}")
+    
     def __len__(self) -> int:
         """Returns the number of loaded coordinate files."""
         return len(self.data)
