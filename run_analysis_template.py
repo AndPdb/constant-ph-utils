@@ -14,6 +14,12 @@ sys.path.insert(1, 'constant-ph-utils/')
 RUN_TYPE = "Publication"  # Debug or Publication
 PLOT_TYPE = "Debug"  # Debug or Publication
 NPZ_OUTPUT = False  # True or False
+THREADS = 8  # Number of threads for parallel processing
+XVG_ROWS = 2000000  # Number of rows to read from the XVG files
+PLOT_ROWS = 21  # Number of rows in the plot grid
+PLOT_COLS = 5  # Number of columns in the plot grid
+# List of chains to analyze. Right now works for two chains only.
+CHAINS = None
 
 # Path variables
 LAMBDAREF_PATH = "test"
@@ -27,6 +33,7 @@ MD2_PREFIX = "MD1_2"
 
 
 def main():
+    # Load lambda reference data
     lambda_ref = pd.read_csv(os.path.join(
         LAMBDAREF_PATH, 'lambdareference.dat'), sep=r'\s+', engine='python')
 
@@ -34,85 +41,116 @@ def main():
         lambda_ref = lambda_ref.rename(
             columns={"chain": "coordinateFile", "coordinateFile": "chain"})
 
+    # Create a mapping from coordinate IDs to lambda values
     coord2lambda_dict = parse_lambda_reference(
         os.path.join(LAMBDAREF_PATH, 'lambdareference.dat'))
+
+    # Get the list of coordinate IDs
+    coordids = list(coord2lambda_dict.keys())
 
     # Create an instance of XVGData for the directories
     xvg_data_list = []
 
+    # In case of multiple homomeric chains
+    if CHAINS is not None:
+        lambda_ref_chains = lambda_ref.groupby('chain')
+        # This should be adapted case by case, depending on the chain names in the lambda reference and the desired mapping
+        mapping = dict(
+            zip(lambda_ref_chains.groups[CHAINS[0]]+1, lambda_ref_chains.groups[CHAINS[1]]+1))
+
+        coordids_chain = {}
+        for chain in CHAINS:
+            coordids_chain[str(chain)] = [
+                index+1 for index, row in lambda_ref_chains.get_group(str(chain)).iterrows()]
+
+    # In case of single chain
+    else:
+        mapping = {}
+
+    # Load XVGdata for each path and chain
     for path in PATHS_MD:
         if not os.path.exists(path):
             raise FileNotFoundError(
                 f"Directory {path} does not exist. Please check the path and try again.")
-        xvg_data_list.append(XVGData(path, num_rows=2000000, num_threads=2))
 
-    time_MD1 = xvg_data_list[0][1][-1, 0]  # Get last time of MD1
+        if CHAINS is not None:
+            for chain in CHAINS:
+                xvg_data_list.append(XVGData(path, coordids=coordids_chain[str(
+                    chain)], num_rows=XVG_ROWS, num_threads=THREADS))
+        else:
+            xvg_data_list.append(
+                XVGData(path, coordids=coordids, num_rows=XVG_ROWS, num_threads=THREADS))
 
+    # Get last time of MD1 for plotting time series
+    time_MD1 = xvg_data_list[0][1][-1, 0]
+
+    # In case we have replicas
     if RUN_TYPE == "Publication":
-        time_MDs = min(map(lambda x: x[1][-1, 0], xvg_data_list))
+        time_MDs = []
 
-    # MD1
+        for data in xvg_data_list:
+            try:
+                time_MDs.append(data[1][-1, 0])
+            except KeyError:
+                continue
+        # Find common minimal time across all simulations for convergence analysis
+        min_time = min(time_MDs)
 
     # Overview lambda distributions
-    lambda_hist_md1 = plot_lambda_hist(
-        PATH_MD1, xvg_data_list[0], coord2lambda_dict, lambda_ref, quality=PLOT_TYPE)
-    lambda_hist_md1.savefig(f"{MD1_PREFIX}_histograms.png")
-    lambda_hist_md1.close()
+    i = 0
+    for path in PATHS_MD:
+        title = path.split("/")[-2]
+        if CHAINS is not None:
+            for chain in lambda_ref_chains.groups.keys():
+                lambda_hist = plot_lambda_hist(
+                    xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS)
+                lambda_hist.savefig(f"{title}_{chain}_histograms.png")
+                lambda_hist.close()
+                i += 1
+        else:
+            lambda_hist = plot_lambda_hist(
+                xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS)
+            lambda_hist.savefig(f"{title}_histograms.png")
+            lambda_hist.close()
+            i += 1
 
     # Protonation fraction time series
-    proton_ts_md1 = plot_protonation_timeseries(
-        PATH_MD1, time_MD1, xvg_data_list[0], coord2lambda_dict, lambda_ref, quality=PLOT_TYPE, npz_output=NPZ_OUTPUT)
-    proton_ts_md1.savefig(f"{MD1_PREFIX}_timeseries.png")
-    proton_ts_md1.close()
+    i = 0
+    for path in PATHS_MD:
+        title = path.split("/")[-2]
+        if CHAINS is not None:
+            for chain in CHAINS:
+                proton_ts = plot_protonation_timeseries(
+                    time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS)
+                proton_ts.savefig(f"{title}_{chain}_timeseries.png")
+                proton_ts.close()
+                i += 1
+        else:
+            proton_ts = plot_protonation_timeseries(
+                time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS)
+            proton_ts.savefig(f"{title}_timeseries.png")
+            proton_ts.close()
+            i += 1
 
-    if RUN_TYPE == "Publication":
-        # MD2
-
-        # ## Overview lambda distributions
-        lambda_hist_md2 = plot_lambda_hist(
-            PATH_MD2, xvg_data_list[1], coord2lambda_dict, lambda_ref, quality=PLOT_TYPE)
-        lambda_hist_md2.savefig(f"{MD2_PREFIX}_histograms.png")
-        lambda_hist_md2.close()
-
-        # ## Protonation fraction time series
-        proton_ts_md2 = plot_protonation_timeseries(
-            PATH_MD2, time_MDs, xvg_data_list[1], coord2lambda_dict, lambda_ref, quality=PLOT_TYPE, npz_output=NPZ_OUTPUT)
-        proton_ts_md2.savefig(f"{MD2_PREFIX}_timeseries.png")
-        proton_ts_md2.close()
-
-        # MD1 vs MD2
+    if RUN_TYPE == "Publication":     # In case we have replicas
 
         # ## Protonation convergence
         proton_conv = plot_protonation_convergence(
-            PATHS_MD, time_MDs, xvg_data_list, coord2lambda_dict, lambda_ref, quality=PLOT_TYPE)
+            PATHS_MD, min_time, xvg_data_list, coord2lambda_dict, lambda_ref, chain_mapping=mapping, rows=PLOT_ROWS, quality=PLOT_TYPE)
         proton_conv.savefig(f"{MD1_PREFIX}_{MD2_PREFIX}_convergence.png")
         proton_conv.close()
 
         # ## Overview protonation fractions
         proton_frac = plot_protonation_fraction(
-            xvg_data_list, lambda_ref, npz_output=NPZ_OUTPUT)
+            xvg_data_list, lambda_ref, chain_mapping=mapping, rows=PLOT_ROWS, npz_output=NPZ_OUTPUT)
         proton_frac.savefig(f"{MD1_PREFIX}_{MD2_PREFIX}_protonfraction.png")
         proton_frac.close()
 
         # ## Sigle residue protonation fraction time series
-        # ### Glu75
-        glu75_id = resid2coordid(75, lambda_ref)
-        res1_conv = single_residue_convergence(
-            glu75_id, xvg_data_list, lambda_ref)
-        res1_conv.savefig("Glu75.png")
-        res1_conv.close()
-
-        # ### Glu78
-        glu78_id = resid2coordid(78, lambda_ref)
-        res2_conv = single_residue_convergence(
-            glu78_id, xvg_data_list, lambda_ref)
-        res2_conv.savefig("Glu78.png")
-        res2_conv.close()
-
         # ### Glu513
         glu513_id = resid2coordid(513, lambda_ref)
         res3_conv = single_residue_convergence(
-            glu513_id, xvg_data_list, lambda_ref)
+            glu513_id, xvg_data_list, lambda_ref, chain_mapping=mapping, title="Convergence of residue Glu513")
         res3_conv.savefig("Glu513.png")
         res3_conv.close()
 
