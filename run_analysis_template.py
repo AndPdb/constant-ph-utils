@@ -1,14 +1,14 @@
 # If you want to run this outside of the constant-ph-utils directory, uncomment the following lines
+import sys, os
+# caution: path[0] is reserved for script path (or '' in REPL)
+sys.path.insert(1, 'constant-ph-utils/')
+
 import pandas as pd
 from plot import *
 from analyses import *
 import argparse
 import pstats
 import cProfile
-import sys
-import os
-# caution: path[0] is reserved for script path (or '' in REPL)
-sys.path.insert(1, 'constant-ph-utils/')
 
 
 RUN_TYPE = "Publication"  # Debug or Publication
