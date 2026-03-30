@@ -4,6 +4,28 @@ import copy
 from collections import OrderedDict
 
 
+def _display_resname(resname, single_letter=False):
+    """Clean residue name for publication labels: strip trailing T, HSP -> HIS, title case.
+    If single_letter=True, convert to one-letter amino acid code.
+    """
+    name = resname.rstrip("T")
+    if name == "HSP":
+        name = "HIS"
+    name = name[0] + name[1:].lower()
+
+    if single_letter:
+        one_letter_map = {
+            "Arg": "R",
+            "Lys": "K",
+            "Glu": "E",
+            "Asp": "D",
+            "His": "H",
+        }
+        return one_letter_map.get(name, name)
+
+    return name
+
+
 def _group_coordids_by_resname(coordids, lambda_ref):
     """Group coordids by their three-letter residue name.
 
@@ -17,7 +39,7 @@ def _group_coordids_by_resname(coordids, lambda_ref):
     return groups
 
 
-def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug'):
+def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug',single_letter=False):
     """Plot histogram of lambda values"""
     # Set up the grid size
     # Create a figure with subplots
@@ -51,14 +73,14 @@ def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, q
                 data = xvg_data[coordid]
                 ax.hist(data[:, 1], bins=500)
                 ax.set_xlim(-0.125, 1.125)
-                
+
                 # Decide whether to use residue name or coordid in title
                 if quality == 'Debug':
                     ax.set_title(
                         f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
                 elif quality == 'Publication':
-                    ax.set_title(
-                        f'{lambda_ref.iloc[coordid-1]["resname"]}_{lambda_ref.iloc[coordid-1]["resid"]}')
+                    rn = _display_resname(lambda_ref.iloc[coordid-1]["resname"], single_letter)
+                    ax.set_title(f'{rn}{lambda_ref.iloc[coordid-1]["resid"]}')
             else:
                 continue
 
@@ -71,7 +93,7 @@ def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, q
     return plt
 
 
-def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug', npz_output=False):
+def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug', npz_output=False, single_letter=False):
     """"Plot protonation time-series"""
     # Set up the grid size
     # Create a figure with subplots
@@ -142,8 +164,8 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
                     ax.set_title(
                         f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
                 elif quality == 'Publication':
-                    ax.set_title(
-                        f'{lambda_ref.iloc[coordid-1]["resname"]}_{lambda_ref.iloc[coordid-1]["resid"]}')
+                    rn = _display_resname(lambda_ref.iloc[coordid-1]["resname"], single_letter)
+                    ax.set_title(f'{rn}{lambda_ref.iloc[coordid-1]["resid"]}')
 
             else:
                 continue
@@ -156,7 +178,7 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
     return plt
 
 
-def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGData], coord2lambda_dict, lambda_ref, chain_mapping={}, rows=20, cols=5, quality='Debug'):
+def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGData], coord2lambda_dict, lambda_ref, chain_mapping={}, rows=20, cols=5, quality='Debug', single_letter=False):
     """Plot protonation avg and standard error time-series. Just two replicas supported - add get_protfrac_ts if more than 2"""
     # Set up the grid size
     # Create a figure with subplots
@@ -231,8 +253,9 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
                     ax.set_title(
                         f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
                 elif quality == 'Publication':
-                    ax.set_title(
-                        f'{lambda_ref.iloc[coordid-1]["resname"]}_{lambda_ref.iloc[coordid-1]["resid"]}')
+                    rn = _display_resname(
+                        lambda_ref.iloc[coordid-1]["resname"], single_letter)
+                    ax.set_title(f'{rn}{lambda_ref.iloc[coordid-1]["resid"]}')
 
             else:
                 continue
@@ -246,7 +269,7 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
 
 
 def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
-                              chain_mapping={}, npz_output=False):
+                              chain_mapping={}, npz_output=False, single_letter=False):
     """Plot protonation fractions, one figure per residue type.
     All residues of the same type are shown as bars on a single axis.
     """
@@ -283,7 +306,7 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
                 proton_avg, deproton_avg, proton_se, deproton_se = \
                     get_statistics(coordid, xvg_data_list, chain_mapping)
 
-            labels.append(f"{resname}_{resid}")
+            labels.append(str(resid))
             avgs.append(proton_avg)
             ses.append(proton_se)
 
@@ -303,8 +326,10 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
                      labels=[f"{a:.2f} ± {s:.2f}" for a, s in zip(avgs, ses)],
                      padding=5, fontsize=8)
 
+        display_name = _display_resname(resname, single_letter)
+        res_labels = [f"{display_name}{lid}" for lid in labels]
         ax.set_xticks(x)
-        ax.set_xticklabels(labels, fontsize=10)
+        ax.set_xticklabels(res_labels, fontsize=10)
         ax.set_ylabel("Protonation Fraction", fontsize=11)
         ax.set_ylim(0.0, 1.15)
         ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])

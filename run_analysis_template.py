@@ -13,11 +13,14 @@ import cProfile
 
 RUN_TYPE = "Publication"  # Debug or Publication
 PLOT_TYPE = "Debug"  # Debug or Publication
+SINGLE_LETTER = True  # Use single-letter amino acid codes in labels
+PLOT_ROWS = 21  # Number of rows in the plot grid
+PLOT_COLS = 5  # Number of columns in the plot grid
+
 NPZ_OUTPUT = False  # True or False
 THREADS = 8  # Number of threads for parallel processing
 XVG_ROWS = 2000000  # Number of rows to read from the XVG files
-PLOT_ROWS = 21  # Number of rows in the plot grid
-PLOT_COLS = 5  # Number of columns in the plot grid
+
 # List of chains to analyze. Right now works for two chains only.
 CHAINS = None
 
@@ -113,13 +116,13 @@ def main():
         if CHAINS is not None:
             for chain in lambda_ref_chains.groups.keys():
                 lambda_hist = plot_lambda_hist(
-                    xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS)
+                    xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS, single_letter=SINGLE_LETTER)
                 lambda_hist.savefig(f"{title}_{chain}_histograms.png")
                 lambda_hist.close()
                 i += 1
         else:
             lambda_hist = plot_lambda_hist(
-                xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS)
+                xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS,  single_letter=SINGLE_LETTER)
             lambda_hist.savefig(f"{title}_histograms.png")
             lambda_hist.close()
             i += 1
@@ -131,13 +134,13 @@ def main():
         if CHAINS is not None:
             for chain in CHAINS:
                 proton_ts = plot_protonation_timeseries(
-                    time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS)
+                    time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
                 proton_ts.savefig(f"{title}_{chain}_timeseries.png")
                 proton_ts.close()
                 i += 1
         else:
             proton_ts = plot_protonation_timeseries(
-                time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS)
+                time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
             proton_ts.savefig(f"{title}_timeseries.png")
             proton_ts.close()
             i += 1
@@ -146,14 +149,14 @@ def main():
 
         # ## Protonation convergence
         proton_conv = plot_protonation_convergence(
-            PATHS_MD, min_time, xvg_data_list, coord2lambda_dict, lambda_ref, chain_mapping=mapping, rows=PLOT_ROWS, quality=PLOT_TYPE)
+            PATHS_MD, min_time, xvg_data_list, coord2lambda_dict, lambda_ref, chain_mapping=mapping, rows=PLOT_ROWS, quality=PLOT_TYPE,  single_letter=SINGLE_LETTER)
         proton_conv.savefig(f"{CONVERG_PREFIX}_convergence.png")
         proton_conv.close()
 
         # ## Overview protonation fractions
         figures = plot_protonation_fraction(
             xvg_data_list, lambda_ref, chain_mapping=mapping,
-            npz_output=NPZ_OUTPUT)
+            npz_output=NPZ_OUTPUT,  single_letter=SINGLE_LETTER)
         _save_figures(figures, f"{CONVERG_PREFIX}_protonfraction")
 
         # ## Sigle residue protonation fraction time series
