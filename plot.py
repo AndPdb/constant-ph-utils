@@ -1,6 +1,20 @@
 import matplotlib.pyplot as plt
 from analyses import *
 import copy
+from collections import OrderedDict
+
+
+def _group_coordids_by_resname(coordids, lambda_ref):
+    """Group coordids by their three-letter residue name.
+
+    Returns an OrderedDict: {resname: [coordid, ...]} preserving
+    the order in which each residue type first appears.
+    """
+    groups = OrderedDict()
+    for cid in coordids:
+        resname = lambda_ref.iloc[cid - 1]["resname"]
+        groups.setdefault(resname, []).append(cid)
+    return groups
 
 
 def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug'):
@@ -31,14 +45,13 @@ def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, q
     for i in range(rows):
         for j in range(cols):
             index = coordid - index_coordid
-            # print(index)
 
             if index < len(xvg_data.coordids):
                 ax = axes[i, j]
                 data = xvg_data[coordid]
                 ax.hist(data[:, 1], bins=500)
-
                 ax.set_xlim(-0.125, 1.125)
+                
                 # Decide whether to use residue name or coordid in title
                 if quality == 'Debug':
                     ax.set_title(
@@ -232,81 +245,77 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
     return plt
 
 
-def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref, chain_mapping={}, rows=20, cols=5, npz_output=False):
-    """Plot protonation fractions avg and se"""
-    # Set up the grid size
-    # Create a figure with subplots
-    # Adjusted figure size for 5x20 layout
-    fig, axes = plt.subplots(rows, cols, figsize=(15, 40))
-    fig.tight_layout(pad=2.0)  # Optional: adjust padding between plots
+def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
+                              chain_mapping={}, npz_output=False):
+    """Plot protonation fractions, one figure per residue type.
+    All residues of the same type are shown as bars on a single axis.
+    """
+    all_coordids = list(range(1, len(xvg_data_list[0].coordids) + 1))
+    groups = _group_coordids_by_resname(all_coordids, lambda_ref)
+    figures = {}
 
-    dimensions = len(xvg_data_list[0].coordids)
-    coordid = 1
-    prv_resid = 0
-
-    # Create folder for npz protonation fraction files
     if npz_output:
-        npz_dir = f"npz_protfrac"
+        npz_dir = "npz_protfrac"
         if not os.path.exists(npz_dir):
             os.makedirs(npz_dir)
 
-    # Generate and plot data for each subplot
-    for i in range(rows):
-        for j in range(cols):
-            index = coordid-1
+    for resname, cids in groups.items():
+        labels = []
+        avgs = []
+        ses = []
+        prv_resid = 0
+        seen_resids = set()
 
-            if index < dimensions:
-                ax = axes[i, j]
+        for coordid in cids:
+            index = coordid - 1
+            resid = lambda_ref.iloc[index]['resid']
 
-                # Generate some data; here, we're using sine waves with different frequencies
-
-                if lambda_ref.iloc[index]['resname'] == "HSPT":  # If histidine
-                    # If this is histidine lambda1
-                    if lambda_ref.iloc[index]['resid'] != prv_resid:
-
-                        coordids = [coordid, coordid+1, coordid+2]
-
-                        proton_avg, proton_se = get_histidine_statistics(
-                            coordids, xvg_data_list, chain_mapping)
-
-                        prv_resid = lambda_ref.iloc[index]['resid']
-                    else:
-                        proton_avg, proton_se = get_histidine_statistics(
-                            coordids, xvg_data_list, chain_mapping)
-
-                else:
-                    proton_avg, deproton_avg, proton_se, deproton_se = get_statistics(
-                        coordid, xvg_data_list, chain_mapping)
-
-                bars = ax.bar(['Protonated'], [proton_avg], yerr=proton_se,
-                              capsize=5, linewidth=1, edgecolor='black')
-                ax.bar_label(
-                    bars, labels=[f"{proton_avg:.2f} ± {proton_se:.2f}"])
-
-                ax.set_ylim(0, 1.2)
-                ax.set_title(
-                    f'{lambda_ref.iloc[coordid-1]["resname"]}_{lambda_ref.iloc[coordid-1]["resid"]}')
-
-                ax.set_yticks([0, 0.5, 1])
-                ax.set_xticks([])
-
-                # Save output in npz file named after the residue
-                if npz_output:
-                    resname = lambda_ref.iloc[index]['resname']
-                    resid = lambda_ref.iloc[index]['resid']
-                    np.savez(f"{npz_dir}/{resname}_{resid}_protonation_fraction.npz",
-                             res_prot_avg=proton_avg, res_prot_se=proton_se)
-
+            if lambda_ref.iloc[index]['resname'] == "HSPT":
+                if resid in seen_resids:
+                    continue
+                seen_resids.add(resid)
+                if resid != prv_resid:
+                    hist_coordids = [coordid, coordid + 1, coordid + 2]
+                    prv_resid = resid
+                proton_avg, proton_se = get_histidine_statistics(
+                    hist_coordids, xvg_data_list, chain_mapping)
             else:
-                continue
+                proton_avg, deproton_avg, proton_se, deproton_se = \
+                    get_statistics(coordid, xvg_data_list, chain_mapping)
 
-            coordid += 1
+            labels.append(f"{resname}_{resid}")
+            avgs.append(proton_avg)
+            ses.append(proton_se)
 
-    # Show the plot
-    for ax in axes.flat[coordid-1:]:
-        ax.remove()
+            if npz_output:
+                rn = lambda_ref.iloc[index]['resname']
+                np.savez(f"{npz_dir}/{rn}_{resid}_protonation_fraction.npz",
+                         res_prot_avg=proton_avg, res_prot_se=proton_se)
 
-    return plt
+        n = len(avgs)
+        bar_color = "#4472C4"
+        fig, ax = plt.subplots(figsize=(max(3, n * 1.2), 4))
+        x = np.arange(n)
+        bars = ax.bar(x, avgs, yerr=ses, capsize=5, width=0.5,
+                      color=bar_color, edgecolor=bar_color,
+                      error_kw=dict(lw=1.2, capthick=1.2))
+        ax.bar_label(bars,
+                     labels=[f"{a:.2f} ± {s:.2f}" for a, s in zip(avgs, ses)],
+                     padding=5, fontsize=8)
+
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, fontsize=10)
+        ax.set_ylabel("Protonation Fraction", fontsize=11)
+        ax.set_ylim(0.0, 1.15)
+        ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.tick_params(axis='both', which='both', labelsize=10)
+        fig.tight_layout()
+
+        figures[resname] = fig
+
+    return figures
 
 
 def single_residue_convergence(coordid, xvg_data_list: List[XVGData], lambda_ref, chain_mapping={}, title="Constant-pH MD"):

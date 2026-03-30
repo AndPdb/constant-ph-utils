@@ -29,6 +29,16 @@ PATHS_MD = [PATH_MD1, PATH_MD2]
 MD1_PREFIX = "MD1"
 MD2_PREFIX = "MD1_2"
 
+CONVERG_PREFIX = "-".join([x.split("/")[-2] for x in PATHS_MD])
+
+
+def _save_figures(figures, prefix):
+    """Save every figure in a {resname: fig} dict and close it."""
+    for resname, fig in figures.items():
+        fig.savefig(f"{prefix}_{resname}.png", bbox_inches='tight')
+        plt.close(fig)
+
+
 ###### Main function #######
 
 
@@ -137,14 +147,14 @@ def main():
         # ## Protonation convergence
         proton_conv = plot_protonation_convergence(
             PATHS_MD, min_time, xvg_data_list, coord2lambda_dict, lambda_ref, chain_mapping=mapping, rows=PLOT_ROWS, quality=PLOT_TYPE)
-        proton_conv.savefig(f"{MD1_PREFIX}_{MD2_PREFIX}_convergence.png")
+        proton_conv.savefig(f"{CONVERG_PREFIX}_convergence.png")
         proton_conv.close()
 
         # ## Overview protonation fractions
-        proton_frac = plot_protonation_fraction(
-            xvg_data_list, lambda_ref, chain_mapping=mapping, rows=PLOT_ROWS, npz_output=NPZ_OUTPUT)
-        proton_frac.savefig(f"{MD1_PREFIX}_{MD2_PREFIX}_protonfraction.png")
-        proton_frac.close()
+        figures = plot_protonation_fraction(
+            xvg_data_list, lambda_ref, chain_mapping=mapping,
+            npz_output=NPZ_OUTPUT)
+        _save_figures(figures, f"{CONVERG_PREFIX}_protonfraction")
 
         # ## Sigle residue protonation fraction time series
         # ### Glu513
