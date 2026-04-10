@@ -13,31 +13,6 @@ import pstats
 import cProfile
 
 
-# RUN_TYPE = "Publication"  # Debug or Publication
-# PLOT_TYPE = "Debug"  # Debug or Publication
-# SINGLE_LETTER = True  # Use single-letter amino acid codes in labels
-# PLOT_ROWS = 21  # Number of rows in the plot grid
-# PLOT_COLS = 5  # Number of columns in the plot grid
-
-# NPZ_OUTPUT = False  # True or False
-# THREADS = 8  # Number of threads for parallel processing
-# XVG_ROWS = 2000000  # Number of rows to read from the XVG files
-
-# # List of chains to analyze. Right now works for two chains only.
-# CHAINS = None
-
-# # Path variables
-# LAMBDAREF_PATH = "test"
-# PATH_MD1 = "test/MD1/analysis"
-# PATH_MD2 = "test/MD1_2/analysis"
-# PATHS_MD = [PATH_MD1, PATH_MD2]
-# MD1_PREFIX = "MD1"
-# MD2_PREFIX = "MD1_2"
-# res_ids = [75, 78, 513] # Residue number for single convergence plot
-
-# CONVERG_PREFIX = "-".join([x.split("/")[-2] for x in PATHS_MD])
-
-
 ###### Main function #######
 
 
@@ -249,7 +224,7 @@ if __name__ == "__main__":
     if args.profile:
         profiler = cProfile.Profile()
         profiler.enable()
-        main()
+        main(args)
         profiler.disable()
         profiler.dump_stats('profile_results.prof')
 
