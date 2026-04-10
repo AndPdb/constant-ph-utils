@@ -48,7 +48,7 @@ All plots support both a `Debug` mode (coordinate IDs in titles) and a `Publicat
 constant-ph-utils/
 ├── analyses.py                  # Data loading, statistics, time series
 ├── plot.py                      # All plotting functions
-├── run_analysis_template.py     # CLI entry point
+├── run_analysis.py              # CLI entry point
 └── README.md
 ```
 
@@ -88,7 +88,7 @@ To enable tab-completion of all `--flags` in your terminal, run the appropriate 
 **Bash** (add to `~/.bashrc`):
 
 ```bash
-eval "$(register-python-argcomplete run_analysis_template.py)"
+eval "$(register-python-argcomplete run_analysis.py)"
 ```
 
 **Zsh** (add to `~/.zshrc`):
@@ -96,7 +96,7 @@ eval "$(register-python-argcomplete run_analysis_template.py)"
 ```bash
 autoload -U bashcompinit
 bashcompinit
-eval "$(register-python-argcomplete run_analysis_template.py)"
+eval "$(register-python-argcomplete run_analysis.py)"
 ```
 
 **Global activation** (enables completion for all argcomplete-enabled scripts):
@@ -108,7 +108,7 @@ activate-global-python-argcomplete
 After sourcing your shell config (`source ~/.bashrc` or `source ~/.zshrc`), you can type:
 
 ```bash
-python run_analysis_template.py --<TAB><TAB>
+python run_analysis.py --<TAB><TAB>
 ```
 
 and get a list of all available flags.
@@ -120,7 +120,7 @@ and get a list of all available flags.
 The toolkit expects the following directory layout:
 
 ```
-project/
+test/
 ├── lambdareference.dat                # Lambda reference table
 ├── MD1/
 │   └── analysis/
@@ -154,9 +154,10 @@ project/
 Minimal invocation with two replicas:
 
 ```bash
-python run_analysis_template.py \
-  --lambdaref-path project/ \
-  --paths-md project/MD1/analysis project/MD2/analysis
+python run_analysis.py \
+  --lambdaref-path test/ \
+  --paths-md test/MD1/analysis test/MD2/analysis \
+  --dir-plot plots/
 ```
 
 This runs in `Publication` mode (the default), producing all plot types.
@@ -164,20 +165,20 @@ This runs in `Publication` mode (the default), producing all plot types.
 ### Full CLI Reference
 
 ```
-usage: run_analysis_template.py [-h]
+usage: run_analysis.py [-h]
     --lambdaref-path LAMBDAREF_PATH
     --paths-md PATHS_MD [PATHS_MD ...]
+    --dir-plot DIR_PLOT
+    [--res-ids RES_IDS [RES_IDS ...]]
     [--run-type {Debug,Publication}]
     [--plot-type {Debug,Publication}]
     [--plot-rows PLOT_ROWS]
     [--plot-cols PLOT_COLS]
     [--no-single-letter]
     [--npz-output]
-    [--dpi DPI]
     [--threads THREADS]
     [--xvg-rows XVG_ROWS]
     [--chains CHAINS [CHAINS ...]]
-    [--res-ids RES_IDS [RES_IDS ...]]
     [--profile]
 ```
 
@@ -185,17 +186,17 @@ usage: run_analysis_template.py [-h]
 |---|---|---|
 | `--lambdaref-path` | *required* | Directory containing `lambdareference.dat` |
 | `--paths-md` | *required* | One or more paths to MD analysis directories |
+| `--dir-plot` | *required* | Output directory for all generated plots |
+| `--res-ids` | `None` | Residue IDs for single-residue convergence plots |
 | `--run-type` | `Publication` | `Debug` = single-replica plots only; `Publication` = adds convergence + fraction plots |
 | `--plot-type` | `Debug` | `Debug` = coord IDs in titles; `Publication` = residue names |
 | `--plot-rows` | `21` | Rows in the overview plot grids |
 | `--plot-cols` | `5` | Columns in the overview plot grids |
 | `--no-single-letter` | *(off)* | Use three-letter amino acid codes (default is one-letter) |
 | `--npz-output` | `False` | Save protonation data as `.npz` files |
-| `--dpi` | `300` | DPI for all saved figures |
 | `--threads` | `8` | Parallel threads for XVG loading |
 | `--xvg-rows` | `2000000` | Max rows to read per XVG file |
 | `--chains` | `None` | Chain identifiers for homomeric systems (e.g. `A B`) |
-| `--res-ids` | `None` | Residue IDs for single-residue convergence plots |
 | `--profile` | `False` | Enable cProfile profiling |
 
 ### Examples
@@ -203,31 +204,34 @@ usage: run_analysis_template.py [-h]
 **Debug mode — single replica, quick check:**
 
 ```bash
-python run_analysis_template.py \
+python run_analysis.py \
   --lambdaref-path test/ \
   --paths-md test/MD1/analysis \
+  --dir-plot plots/ \
   --run-type Debug \
-  --plot-type Debug \
+  --plot-type Debug
 ```
 
 **Publication mode — two replicas, residue-level convergence, NPZ export:**
 
 ```bash
-python run_analysis_template.py \
+python run_analysis.py \
   --lambdaref-path test/ \
   --paths-md test/MD1/analysis test/MD2/analysis \
+  --dir-plot plots/ \
   --run-type Publication \
   --plot-type Publication \
   --res-ids 75 78 513 \
-  --npz-output \
+  --npz-output
 ```
 
 **Three-letter labels and custom grid:**
 
 ```bash
-python run_analysis_template.py \
+python run_analysis.py \
   --lambdaref-path test/ \
   --paths-md test/MD1/analysis test/MD2/analysis \
+  --dir-plot plots/ \
   --no-single-letter \
   --plot-rows 15 --plot-cols 4
 ```
@@ -235,9 +239,10 @@ python run_analysis_template.py \
 **Homomeric dimer (two chains):**
 
 ```bash
-python run_analysis_template.py \
+python run_analysis.py \
   --lambdaref-path test/ \
   --paths-md test/MD1/analysis test/MD2/analysis \
+  --dir-plot plots/ \
   --chains A B
 ```
 
@@ -245,15 +250,15 @@ python run_analysis_template.py \
 
 ## Output Files
 
-All figures are saved in the current working directory. File names are derived from the MD path names.
+All figures are saved in the directory specified by `--dir-plot`. The directory must exist before running the script. File names are derived from the MD path names.
 
 | File pattern | Generated by | Mode |
 |---|---|---|
-| `{MD}_histograms.png` | `plot_lambda_hist` | Always |
-| `{MD}_timeseries.png` | `plot_protonation_timeseries` | Always |
-| `{prefix}_convergence.png` | `plot_protonation_convergence` | Publication |
-| `{prefix}_protonfraction.png` | `plot_protonation_fraction` | Publication |
-| `Res_{resid}.png` | `single_residue_convergence` | Publication + `--res-ids` |
+| `<dir-plot>/{MD}_histograms.png` | `plot_lambda_hist` | Always |
+| `<dir-plot>/{MD}_timeseries.png` | `plot_protonation_timeseries` | Always |
+| `<dir-plot>/{prefix}_convergence.png` | `plot_protonation_convergence` | Publication |
+| `<dir-plot>/{prefix}_protonfraction.png` | `plot_protonation_fraction` | Publication |
+| `<dir-plot>/Res_{resid}.png` | `single_residue_convergence` | Publication + `--res-ids` |
 | `npz_protfrac/*.npz` | statistics export | `--npz-output` |
 
 Where `{prefix}` is automatically derived by joining the parent directory names of `--paths-md` (e.g. `MD1-MD2`).
@@ -332,9 +337,10 @@ The toolkit identifies histidines by checking for `resname == "HSPT"` in the lam
 For homomeric multimers (e.g. a homodimer), the same titratable residue appears in multiple chains with different coordinate IDs. Use `--chains` to enable multi-chain mode:
 
 ```bash
-python run_analysis_template.py \
-  --lambdaref-path project/ \
-  --paths-md project/MD1/analysis project/MD2/analysis \
+python run_analysis.py \
+  --lambdaref-path test/ \
+  --paths-md test/MD1/analysis test/MD2/analysis \
+  --dir-plot plots/ \
   --chains A B
 ```
 
@@ -347,9 +353,10 @@ This groups coordinates by chain and builds an internal mapping so that statisti
 To identify performance bottlenecks (useful for large systems or long trajectories), enable cProfile:
 
 ```bash
-python run_analysis_template.py \
-  --lambdaref-path project/ \
-  --paths-md project/MD1/analysis \
+python run_analysis.py \
+  --lambdaref-path test/ \
+  --paths-md test/MD1/analysis \
+  --dir-plot plots/ \
   --run-type Debug \
   --profile
 ```
