@@ -204,32 +204,30 @@ usage: run_analysis_template.py [-h]
 
 ```bash
 python run_analysis_template.py \
-  --lambdaref-path project/ \
-  --paths-md project/MD1/analysis \
+  --lambdaref-path test/ \
+  --paths-md test/MD1/analysis \
   --run-type Debug \
   --plot-type Debug \
-  --dpi 150
 ```
 
 **Publication mode — two replicas, residue-level convergence, NPZ export:**
 
 ```bash
 python run_analysis_template.py \
-  --lambdaref-path project/ \
-  --paths-md project/MD1/analysis project/MD2/analysis \
+  --lambdaref-path test/ \
+  --paths-md test/MD1/analysis test/MD2/analysis \
   --run-type Publication \
   --plot-type Publication \
   --res-ids 75 78 513 \
   --npz-output \
-  --dpi 300
 ```
 
 **Three-letter labels and custom grid:**
 
 ```bash
 python run_analysis_template.py \
-  --lambdaref-path project/ \
-  --paths-md project/MD1/analysis project/MD2/analysis \
+  --lambdaref-path test/ \
+  --paths-md test/MD1/analysis test/MD2/analysis \
   --no-single-letter \
   --plot-rows 15 --plot-cols 4
 ```
@@ -238,8 +236,8 @@ python run_analysis_template.py \
 
 ```bash
 python run_analysis_template.py \
-  --lambdaref-path project/ \
-  --paths-md project/MD1/analysis project/MD2/analysis \
+  --lambdaref-path test/ \
+  --paths-md test/MD1/analysis test/MD2/analysis \
   --chains A B
 ```
 
