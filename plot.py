@@ -419,11 +419,13 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
     return fig
 
 
-def single_residue_convergence(coordid, xvg_data_list: List[XVGData], lambda_ref, chain_mapping={}, title="Constant-pH MD"):
+def single_residue_convergence(coordid, xvg_data_list: List[XVGData], lambda_ref, chain_mapping={}, single_letter=True):
     """THIS WORKS ONLY FOR NON HISTIDINES! Plot convergence of single residue. Just two replicas supported - add res_fracX if more."""
 
     res_fractions = []
 
+    display_name = _display_resname(lambda_ref.iloc[coordid-1]["resname"], single_letter)
+    display_id = lambda_ref.iloc[coordid-1]["resid"]
     for xvg_data in xvg_data_list:
         res_fractions.append(get_protonation_timeseries(
             coordid, xvg_data, chain_mapping=chain_mapping))
@@ -437,7 +439,7 @@ def single_residue_convergence(coordid, xvg_data_list: List[XVGData], lambda_ref
         np.sqrt(len(total_protarray))
 
     plt.plot(np.mean(total_protarray, axis=0),
-             label=f'{lambda_ref.iloc[coordid-1]["resname"]}_{lambda_ref.iloc[coordid-1]["resid"]}')
+             label=f'{display_name}{display_id}')
     plt.fill_between(np.arange(len(total_protarray[0, :])), np.mean(
         total_protarray, axis=0) - total_protonse, np.mean(total_protarray, axis=0) + total_protonse, alpha=0.5)
 
@@ -445,5 +447,6 @@ def single_residue_convergence(coordid, xvg_data_list: List[XVGData], lambda_ref
     plt.ylabel("Protonation fraction")
     plt.xlabel("Time (ps)")
     plt.legend()
+    title = f"Convergence {display_name}{display_id}"
     plt.title(title)
     return plt

@@ -31,6 +31,7 @@ PATH_MD2 = "test/MD1_2/analysis"
 PATHS_MD = [PATH_MD1, PATH_MD2]
 MD1_PREFIX = "MD1"
 MD2_PREFIX = "MD1_2"
+res_ids = [75, 78, 513] # Residue number for single convergence plot
 
 CONVERG_PREFIX = "-".join([x.split("/")[-2] for x in PATHS_MD])
 
@@ -154,12 +155,12 @@ def main():
         plt.close(fig)
 
         # ## Sigle residue protonation fraction time series
-        # ### Glu513
-        glu513_id = resid2coordid(513, lambda_ref)
-        res3_conv = single_residue_convergence(
-            glu513_id, xvg_data_list, lambda_ref, chain_mapping=mapping, title="Convergence of residue Glu513")
-        res3_conv.savefig("Glu513.png")
-        res3_conv.close()
+        for res_id in res_ids:
+            res_coord = resid2coordid(res_id, lambda_ref)
+            res_conv = single_residue_convergence(
+                res_coord, xvg_data_list, lambda_ref, chain_mapping=mapping, single_letter=SINGLE_LETTER)
+            res_conv.savefig(f"Res_{res_id}.png")
+            res_conv.close()
 
 
 if __name__ == "__main__":
