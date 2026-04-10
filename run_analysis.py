@@ -45,6 +45,8 @@ def main(args):
     # Unpack arguments into local variables
     RUN_TYPE = args.run_type
     PLOT_TYPE = args.plot_type
+    OUTPUT_DIR_PLOT = args.dir_plot
+    RES_IDS = args.res_ids
     SINGLE_LETTER = args.single_letter
     PLOT_ROWS = args.plot_rows
     PLOT_COLS = args.plot_cols
@@ -54,7 +56,7 @@ def main(args):
     CHAINS = args.chains
     LAMBDAREF_PATH = args.lambdaref_path
     PATHS_MD = args.paths_md
-    RES_IDS = args.res_ids
+
  
     # Derive convergence prefix from MD paths
     CONVERG_PREFIX = "-".join([x.rstrip("/").split("/")[-2] for x in PATHS_MD])
@@ -129,13 +131,13 @@ def main(args):
             for chain in lambda_ref_chains.groups.keys():
                 lambda_hist = plot_lambda_hist(
                     xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS, single_letter=SINGLE_LETTER)
-                lambda_hist.savefig(f"{title}_{chain}_histograms.png")
+                lambda_hist.savefig(os.path.join(OUTPUT_DIR_PLOT,f"{title}_{chain}_histograms.png"))
                 lambda_hist.close()
                 i += 1
         else:
             lambda_hist = plot_lambda_hist(
                 xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS,  single_letter=SINGLE_LETTER)
-            lambda_hist.savefig(f"{title}_histograms.png")
+            lambda_hist.savefig(os.path.join(OUTPUT_DIR_PLOT,f"{title}_histograms.png"))
             lambda_hist.close()
             i += 1
 
@@ -147,13 +149,13 @@ def main(args):
             for chain in CHAINS:
                 proton_ts = plot_protonation_timeseries(
                     time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
-                proton_ts.savefig(f"{title}_{chain}_timeseries.png")
+                proton_ts.savefig(os.path.join(OUTPUT_DIR_PLOT,f"{title}_{chain}_timeseries.png"))
                 proton_ts.close()
                 i += 1
         else:
             proton_ts = plot_protonation_timeseries(
                 time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
-            proton_ts.savefig(f"{title}_timeseries.png")
+            proton_ts.savefig(os.path.join(OUTPUT_DIR_PLOT,f"{title}_timeseries.png"))
             proton_ts.close()
             i += 1
 
@@ -162,14 +164,14 @@ def main(args):
         # ## Protonation convergence
         proton_conv = plot_protonation_convergence(
             PATHS_MD, min_time, xvg_data_list, coord2lambda_dict, lambda_ref, chain_mapping=mapping, rows=PLOT_ROWS, quality=PLOT_TYPE,  single_letter=SINGLE_LETTER)
-        proton_conv.savefig(f"{CONVERG_PREFIX}_convergence.png", dpi=300)
+        proton_conv.savefig(os.path.join(OUTPUT_DIR_PLOT,f"{CONVERG_PREFIX}_convergence.png"), dpi=300)
         proton_conv.close()
 
         # ## Overview protonation fractions
         fig = plot_protonation_fraction(
             xvg_data_list, lambda_ref, chain_mapping=mapping,
             npz_output=NPZ_OUTPUT,  single_letter=SINGLE_LETTER)
-        fig.savefig(f"{CONVERG_PREFIX}_protonfraction.png", bbox_inches='tight', dpi=300)
+        fig.savefig(os.path.join(OUTPUT_DIR_PLOT,f"{CONVERG_PREFIX}_protonfraction.png"), bbox_inches='tight', dpi=300)
         plt.close(fig)
 
         # ## Sigle residue protonation fraction time series
@@ -177,7 +179,7 @@ def main(args):
             res_coord = resid2coordid(res_id, lambda_ref)
             res_conv = single_residue_convergence(
                 res_coord, xvg_data_list, lambda_ref, chain_mapping=mapping, single_letter=SINGLE_LETTER)
-            res_conv.savefig(f"Res_{res_id}.png",dpi=300)
+            res_conv.savefig(os.path.join(OUTPUT_DIR_PLOT, f"Res_{res_id}.png"),dpi=300)
             res_conv.close()
 
 
@@ -187,11 +189,16 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
  
     # --- Paths (required) ---
-    parser.add_argument('--lambdaref-path', required=True,
+    parser.add_argument('--lambdaref-path', type=str, required=True,
                         help="Directory containing lambdareference.dat")
-    parser.add_argument('--paths-md', nargs='+', required=True,
+    parser.add_argument('--paths-md', type=str, nargs='+', required=True,
                         help="One or more paths to MD analysis directories")
- 
+    parser.add_argument('--dir-plot', type=str, required=True,
+                        help="Output folder for plots")
+    # --- Single-residue convergence ---
+    parser.add_argument('--res-ids', nargs='+', type=int, default=None,
+                        help="Residue IDs for single-residue convergence plots")
+
     # --- Run / plot mode ---
     parser.add_argument('--run-type', choices=['Debug', 'Publication'],
                         default='Publication',
@@ -230,9 +237,7 @@ if __name__ == "__main__":
     parser.add_argument('--chains', nargs='+', default=None,
                         help="Chain identifiers for homomeric systems (e.g. A B)")
  
-    # --- Single-residue convergence ---
-    parser.add_argument('--res-ids', nargs='+', type=int, default=None,
-                        help="Residue IDs for single-residue convergence plots")
+
  
     # --- Profiling ---
     parser.add_argument('--profile', action='store_true',
