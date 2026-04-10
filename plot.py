@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
 from analyses import *
 import copy
 from collections import OrderedDict
@@ -275,13 +276,14 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
     """
     all_coordids = list(range(1, len(xvg_data_list[0].coordids) + 1))
     groups = _group_coordids_by_resname(all_coordids, lambda_ref)
-    figures = {}
 
     if npz_output:
         npz_dir = "npz_protfrac"
         if not os.path.exists(npz_dir):
             os.makedirs(npz_dir)
 
+    # Collect per-group data first so we can size the figure
+    group_data = OrderedDict()  # {resname: (labels, avgs, ses)}
     for resname, cids in groups.items():
         labels = []
         avgs = []
@@ -314,33 +316,107 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
                 rn = lambda_ref.iloc[index]['resname']
                 np.savez(f"{npz_dir}/{rn}_{resid}_protonation_fraction.npz",
                          res_prot_avg=proton_avg, res_prot_se=proton_se)
+        
+        group_data[resname] = (labels, avgs, ses)
 
-        n = len(avgs)
-        bar_color = "#4472C4"
-        fig, ax = plt.subplots(figsize=(max(3, n * 1.2), 4))
-        x = np.arange(n)
-        bars = ax.bar(x, avgs, yerr=ses, capsize=5, width=0.5,
-                      color=bar_color, edgecolor=bar_color,
-                      error_kw=dict(lw=1.2, capthick=1.2))
-        ax.bar_label(bars,
-                     labels=[f"{a:.2f} ± {s:.2f}" for a, s in zip(avgs, ses)],
-                     padding=5, fontsize=8)
+    # --- Layout: bin-pack groups into rows so small groups share a line ---
+    groups_list = [(rn, lbl, avg, se)
+                   for rn, (lbl, avg, se) in group_data.items()]
+    max_slots = max(len(g[1]) for g in groups_list)
+ 
+    layout_rows = []   # each element: list of (resname, labels, avgs, ses)
+    current_row = []
+    current_slots = 0
+    for g in groups_list:
+        n_bars = len(g[1])
+        if current_slots + n_bars > max_slots and current_row:
+            layout_rows.append(current_row)
+            current_row = [g]
+            current_slots = n_bars
+        else:
+            current_row.append(g)
+            current_slots += n_bars
+    if current_row:
+        layout_rows.append(current_row)
+ 
+    # --- Figure dimensions (publication-ready) ---
+    fig_width = 7.0       # inches, typical double-column width
+    row_height = 2.2      # inches per row
+    n_rows = len(layout_rows)
+    fig = plt.figure(figsize=(fig_width, row_height * n_rows))
+ 
+    outer_gs = GridSpec(n_rows, 1, figure=fig, hspace=0.55)
+ 
+    bar_color = "#4472C4"
+    bar_width = 0.5
+ 
+    for row_idx, row_groups in enumerate(layout_rows):
+        # Width ratios proportional to bar count → equal physical bar width
+        width_ratios = [len(g[1]) for g in row_groups]
+        inner_gs = outer_gs[row_idx].subgridspec(
+            1, len(row_groups), width_ratios=width_ratios, wspace=0.35)
+ 
+        for col_idx, (resname, labels, avgs, ses) in enumerate(row_groups):
+            ax = fig.add_subplot(inner_gs[0, col_idx])
+            n = len(avgs)
+            x = np.arange(n)
+            bars = ax.bar(x, avgs, yerr=ses, capsize=3, width=bar_width,
+                          color=bar_color, edgecolor=bar_color,
+                          error_kw=dict(lw=0.8, capthick=0.8))
+            # ax.bar_label(bars,
+            #              labels=[f"{a:.2f}±{s:.2f}" for a, s in zip(avgs, ses)],
+            #              padding=3, fontsize=6)
+            ax.bar_label(bars,
+                         labels=[f"{a:.2f}" for a in avgs],
+                         padding=3, fontsize=6)
+ 
+            display_name = _display_resname(resname, single_letter)
+            res_labels = [f"{display_name}{lid}" for lid in labels]
+            ax.set_xticks(x)
+            ax.set_xticklabels(res_labels, fontsize=8, rotation=45, ha='right')
+            ax.set_xlim(-0.5, n - 0.5)
+            ax.set_ylim(0.0, 1.15)
+            ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.tick_params(axis='both', which='both', labelsize=8)
+ 
+            # Only leftmost axis in each row gets the y-label
+            if col_idx == 0:
+                ax.set_ylabel("Protonation Fraction", fontsize=9)
+                
+    # # Create a single figure with one row per residue type
+    # n_groups = len(group_data)
+    # max_bars = max(len(v[0]) for v in group_data.values())
+    # fig, axes = plt.subplots(n_groups, 1,
+    #                         figsize=(max(3, max_bars * 1.2), 4 * n_groups),
+    #                         squeeze=False)
+    
+    # bar_color = "#4472C4"
+    # for ax_row, (resname, (labels, avgs, ses)) in zip(axes, group_data.items()):
+    #     ax = ax_row[0]
+    #     n = len(avgs)
+    #     x = np.arange(n)
+    #     bars = ax.bar(x, avgs, yerr=ses, capsize=5, width=0.5,
+    #                   color=bar_color, edgecolor=bar_color,
+    #                   error_kw=dict(lw=1.2, capthick=1.2))
+    #     ax.bar_label(bars,
+    #                  labels=[f"{a:.2f} ± {s:.2f}" for a, s in zip(avgs, ses)],
+    #                  padding=5, fontsize=8)
 
-        display_name = _display_resname(resname, single_letter)
-        res_labels = [f"{display_name}{lid}" for lid in labels]
-        ax.set_xticks(x)
-        ax.set_xticklabels(res_labels, fontsize=10)
-        ax.set_ylabel("Protonation Fraction", fontsize=11)
-        ax.set_ylim(0.0, 1.15)
-        ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.tick_params(axis='both', which='both', labelsize=10)
-        fig.tight_layout()
+    #     display_name = _display_resname(resname, single_letter)
+    #     res_labels = [f"{display_name}{lid}" for lid in labels]
+    #     ax.set_xticks(x)
+    #     ax.set_xticklabels(res_labels, fontsize=10)
+    #     ax.set_ylabel("Protonation Fraction", fontsize=11)
+    #     ax.set_ylim(0.0, 1.15)
+    #     ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    #     ax.spines['top'].set_visible(False)
+    #     ax.spines['right'].set_visible(False)
+    #     ax.tick_params(axis='both', which='both', labelsize=10)
 
-        figures[resname] = fig
-
-    return figures
+    # fig.tight_layout()
+    return fig
 
 
 def single_residue_convergence(coordid, xvg_data_list: List[XVGData], lambda_ref, chain_mapping={}, title="Constant-pH MD"):

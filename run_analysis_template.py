@@ -35,13 +35,6 @@ MD2_PREFIX = "MD1_2"
 CONVERG_PREFIX = "-".join([x.split("/")[-2] for x in PATHS_MD])
 
 
-def _save_figures(figures, prefix):
-    """Save every figure in a {resname: fig} dict and close it."""
-    for resname, fig in figures.items():
-        fig.savefig(f"{prefix}_{resname}.png", bbox_inches='tight')
-        plt.close(fig)
-
-
 ###### Main function #######
 
 
@@ -154,10 +147,11 @@ def main():
         proton_conv.close()
 
         # ## Overview protonation fractions
-        figures = plot_protonation_fraction(
+        fig = plot_protonation_fraction(
             xvg_data_list, lambda_ref, chain_mapping=mapping,
             npz_output=NPZ_OUTPUT,  single_letter=SINGLE_LETTER)
-        _save_figures(figures, f"{CONVERG_PREFIX}_protonfraction")
+        fig.savefig(f"{CONVERG_PREFIX}_protonfraction.png", bbox_inches='tight', dpi=300)
+        plt.close(fig)
 
         # ## Sigle residue protonation fraction time series
         # ### Glu513
