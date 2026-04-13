@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 import os
-import glob
 from typing import Dict, Tuple, List
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -46,9 +45,6 @@ class XVGData:
         with ProcessPoolExecutor(max_workers=self.num_threads) as executor:
             futures_dict = {}
 
-            # xvg_files = glob.glob(f"{self.analysis_dir}/*.xvg")
-            # for analysis_dir in self.analysis_dirs:
-            # for coord_id in range(1, len(xvg_files) + 1):
             for coord_id in self.coordids:
                 coord_xvg_name = f"cphmd-coord-{coord_id}.xvg"
                 coord_xvg_path = os.path.join(
@@ -143,34 +139,6 @@ def get_statistics(coord_id: int, xvg_data_list: List[XVGData], chain_mapping={}
     deprot_se = np.std(deprot_fractions, ddof=1) / \
         np.sqrt(len(deprot_fractions))
     return prot_avg, deprot_avg, prot_se, deprot_se
-
-
-# def get_multichain_statistics(coord_id: int, xvg_data: XVGData) -> Tuple[float, float, float, float]:
-#     """
-#     Reads XVG files from replicas and computes statistics on protonation fractions.
-#     Returns averages and standard errors for protonation and deprotonation.
-#     """
-#     # Initialize lists to store fractions from different replicas
-#     prot_fractions = []
-#     deprot_fractions = []
-
-#     # Iterate over directories (replicas)
-#     for analysis_dir in xvg_data.analysis_dirs:
-#         for chain_id in chains:
-#             array_xvg = xvg_data.get_coord_xvg(coord_id, analysis_dir)
-#             if array_xvg.size > 0:
-#                 prot_frac, deprot_frac = calculate_fractions(array_xvg)
-#                 prot_fractions.append(prot_frac)
-#                 deprot_fractions.append(deprot_frac)
-
-#     # Calculate average and standard error for protonation and deprotonation
-#     prot_avg = np.mean(prot_fractions)
-#     deprot_avg = np.mean(deprot_fractions)
-#     # ddof=1 use N-1 in the denominator
-#     prot_se = np.std(prot_fractions, ddof=1) / np.sqrt(len(prot_fractions))
-#     deprot_se = np.std(deprot_fractions, ddof=1) / \
-#         np.sqrt(len(deprot_fractions))
-#     return prot_avg, deprot_avg, prot_se, deprot_se
 
 
 def get_protonation_timeseries(coord_id: int, xvg_data: XVGData, chain_mapping={}) -> np.ndarray:

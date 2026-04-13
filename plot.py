@@ -46,13 +46,9 @@ def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, q
     # Create a figure with subplots
     # Adjusted figure size for 5x20 layout
     fig, axes = plt.subplots(rows, cols, figsize=(15, 40))
-    # print(xvg_data.coordids)
     coordid = xvg_data.coordids[0]
-    # print(coordid)
     # Create a copy of the coordid list to iterate through
     index_coordid = copy.deepcopy(xvg_data.coordids[0])
-    # coordid = 1
-    prv_resid = 0
 
     # Generate and plot data for each subplot
     if quality == 'Debug':
@@ -102,9 +98,7 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
     fig, axes = plt.subplots(rows, cols, figsize=(15, 40))
 
     coordid = xvg_data.coordids[0]
-    # print(coordid)
     index_coordid = copy.deepcopy(xvg_data.coordids[0])
-    # coordid = 1
     prv_resid = 0
 
     # Generate and plot data for each subplot
@@ -232,7 +226,6 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
                         list_residues.append(get_protonation_timeseries(
                             coordid, xvg_data, chain_mapping))
 
-                # min_length = min(len(res_prot_ts1), len(res_prot_ts2))
                 min_length = min(map(len, list_residues))
                 total_protarray = np.vstack(
                     [res_array[:min_length] for res_array in list_residues])
@@ -363,9 +356,7 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
             bars = ax.bar(x, avgs, yerr=ses, capsize=3, width=bar_width,
                           color=bar_color, edgecolor=bar_color,
                           error_kw=dict(lw=0.8, capthick=0.8))
-            # ax.bar_label(bars,
-            #              labels=[f"{a:.2f}±{s:.2f}" for a, s in zip(avgs, ses)],
-            #              padding=3, fontsize=6)
+
             ax.bar_label(bars,
                          labels=[f"{a:.2f}" for a in avgs],
                          padding=3, fontsize=6)
@@ -385,37 +376,6 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
             if col_idx == 0:
                 ax.set_ylabel("Protonation Fraction", fontsize=9)
                 
-    # # Create a single figure with one row per residue type
-    # n_groups = len(group_data)
-    # max_bars = max(len(v[0]) for v in group_data.values())
-    # fig, axes = plt.subplots(n_groups, 1,
-    #                         figsize=(max(3, max_bars * 1.2), 4 * n_groups),
-    #                         squeeze=False)
-    
-    # bar_color = "#4472C4"
-    # for ax_row, (resname, (labels, avgs, ses)) in zip(axes, group_data.items()):
-    #     ax = ax_row[0]
-    #     n = len(avgs)
-    #     x = np.arange(n)
-    #     bars = ax.bar(x, avgs, yerr=ses, capsize=5, width=0.5,
-    #                   color=bar_color, edgecolor=bar_color,
-    #                   error_kw=dict(lw=1.2, capthick=1.2))
-    #     ax.bar_label(bars,
-    #                  labels=[f"{a:.2f} ± {s:.2f}" for a, s in zip(avgs, ses)],
-    #                  padding=5, fontsize=8)
-
-    #     display_name = _display_resname(resname, single_letter)
-    #     res_labels = [f"{display_name}{lid}" for lid in labels]
-    #     ax.set_xticks(x)
-    #     ax.set_xticklabels(res_labels, fontsize=10)
-    #     ax.set_ylabel("Protonation Fraction", fontsize=11)
-    #     ax.set_ylim(0.0, 1.15)
-    #     ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
-    #     ax.spines['top'].set_visible(False)
-    #     ax.spines['right'].set_visible(False)
-    #     ax.tick_params(axis='both', which='both', labelsize=10)
-
-    # fig.tight_layout()
     return fig
 
 
