@@ -381,10 +381,11 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
     return fig
 
 
-def single_residue_convergence(coordid, xvg_data_list: List[XVGData], lambda_ref, chain_mapping={}, single_letter=True):
+def single_residue_convergence(coordid, xvg_data_list: List[XVGData],time, lambda_ref, chain_mapping={}, single_letter=True):
     """THIS WORKS ONLY FOR NON HISTIDINES! Plot convergence of single residue. Just two replicas supported - add res_fracX if more."""
 
     res_fractions = []
+
 
     display_name = _display_resname(
         lambda_ref.iloc[coordid-1]["resname"], single_letter)
@@ -406,9 +407,15 @@ def single_residue_convergence(coordid, xvg_data_list: List[XVGData], lambda_ref
     plt.fill_between(np.arange(len(total_protarray[0, :])), np.mean(
         total_protarray, axis=0) - total_protonse, np.mean(total_protarray, axis=0) + total_protonse, alpha=0.5)
 
+    length = round(time/10000)*10000
+    xticks = np.arange(0, length, length/3)
+    xticks = np.round(xticks/10000)*10000
+    xticks = np.concatenate((xticks, [length]))
+ 
+    plt.xticks(xticks.astype(int), (xticks/1000).astype(int))
     plt.ylim(0, 1)
     plt.ylabel("Protonation fraction")
-    plt.xlabel("Time (ps)")
+    plt.xlabel("Time (ns)")
     plt.legend()
     title = f"Convergence {display_name}{display_id}"
     plt.title(title)

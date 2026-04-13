@@ -158,7 +158,7 @@ def main(args):
         for res_id in RES_IDS:
             res_coord = resid2coordid(res_id, lambda_ref)
             res_conv = single_residue_convergence(
-                res_coord, xvg_data_list, lambda_ref, chain_mapping=mapping, single_letter=SINGLE_LETTER)
+                res_coord, xvg_data_list, min_time, lambda_ref, chain_mapping=mapping, single_letter=SINGLE_LETTER)
             res_conv.savefig(os.path.join(
                 OUTPUT_DIR_PLOT, f"Res_{res_id}.png"), dpi=300)
             res_conv.close()
