@@ -205,8 +205,6 @@ if __name__ == "__main__":
     # --- Output options ---
     parser.add_argument('--npz-output', action='store_true', default=False,
                         help="Save protonation data as .npz files")
-    parser.add_argument('--dpi', type=int, default=300,
-                        help="DPI for saved figures")
 
     # --- Performance ---
     parser.add_argument('--threads', type=int, default=8,
