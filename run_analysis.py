@@ -1,16 +1,16 @@
 # PYTHON_ARGCOMPLETE_OK
 
-import sys, os
+import cProfile
+import pstats
+import argcomplete
+import argparse
+from analyses import *
+from plot import *
+import pandas as pd
+import sys
+import os
 # caution: path[0] is reserved for script path (or '' in REPL)
 sys.path.insert(1, 'constant-ph-utils/')
-
-import pandas as pd
-from plot import *
-from analyses import *
-import argparse
-import argcomplete
-import pstats
-import cProfile
 
 
 ###### Main function #######
@@ -32,7 +32,6 @@ def main(args):
     LAMBDAREF_PATH = args.lambdaref_path
     PATHS_MD = args.paths_md
 
- 
     # Derive convergence prefix from MD paths
     CONVERG_PREFIX = "-".join([x.rstrip("/").split("/")[-2] for x in PATHS_MD])
     # Load lambda reference data
@@ -106,13 +105,15 @@ def main(args):
             for chain in lambda_ref_chains.groups.keys():
                 lambda_hist = plot_lambda_hist(
                     xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS, single_letter=SINGLE_LETTER)
-                lambda_hist.savefig(os.path.join(OUTPUT_DIR_PLOT,f"{title}_{chain}_histograms.png"))
+                lambda_hist.savefig(os.path.join(
+                    OUTPUT_DIR_PLOT, f"{title}_{chain}_histograms.png"))
                 lambda_hist.close()
                 i += 1
         else:
             lambda_hist = plot_lambda_hist(
                 xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS,  single_letter=SINGLE_LETTER)
-            lambda_hist.savefig(os.path.join(OUTPUT_DIR_PLOT,f"{title}_histograms.png"))
+            lambda_hist.savefig(os.path.join(
+                OUTPUT_DIR_PLOT, f"{title}_histograms.png"))
             lambda_hist.close()
             i += 1
 
@@ -124,13 +125,15 @@ def main(args):
             for chain in CHAINS:
                 proton_ts = plot_protonation_timeseries(
                     time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
-                proton_ts.savefig(os.path.join(OUTPUT_DIR_PLOT,f"{title}_{chain}_timeseries.png"))
+                proton_ts.savefig(os.path.join(
+                    OUTPUT_DIR_PLOT, f"{title}_{chain}_timeseries.png"))
                 proton_ts.close()
                 i += 1
         else:
             proton_ts = plot_protonation_timeseries(
                 time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
-            proton_ts.savefig(os.path.join(OUTPUT_DIR_PLOT,f"{title}_timeseries.png"))
+            proton_ts.savefig(os.path.join(
+                OUTPUT_DIR_PLOT, f"{title}_timeseries.png"))
             proton_ts.close()
             i += 1
 
@@ -139,14 +142,16 @@ def main(args):
         # ## Protonation convergence
         proton_conv = plot_protonation_convergence(
             PATHS_MD, min_time, xvg_data_list, coord2lambda_dict, lambda_ref, chain_mapping=mapping, rows=PLOT_ROWS, quality=PLOT_TYPE,  single_letter=SINGLE_LETTER)
-        proton_conv.savefig(os.path.join(OUTPUT_DIR_PLOT,f"{CONVERG_PREFIX}_convergence.png"), dpi=300)
+        proton_conv.savefig(os.path.join(
+            OUTPUT_DIR_PLOT, f"{CONVERG_PREFIX}_convergence.png"), dpi=300)
         proton_conv.close()
 
         # ## Overview protonation fractions
         fig = plot_protonation_fraction(
             xvg_data_list, lambda_ref, chain_mapping=mapping,
             npz_output=NPZ_OUTPUT,  single_letter=SINGLE_LETTER)
-        fig.savefig(os.path.join(OUTPUT_DIR_PLOT,f"{CONVERG_PREFIX}_protonfraction.png"), bbox_inches='tight', dpi=300)
+        fig.savefig(os.path.join(
+            OUTPUT_DIR_PLOT, f"{CONVERG_PREFIX}_protonfraction.png"), bbox_inches='tight', dpi=300)
         plt.close(fig)
 
         # ## Sigle residue protonation fraction time series
@@ -154,7 +159,8 @@ def main(args):
             res_coord = resid2coordid(res_id, lambda_ref)
             res_conv = single_residue_convergence(
                 res_coord, xvg_data_list, lambda_ref, chain_mapping=mapping, single_letter=SINGLE_LETTER)
-            res_conv.savefig(os.path.join(OUTPUT_DIR_PLOT, f"Res_{res_id}.png"),dpi=300)
+            res_conv.savefig(os.path.join(
+                OUTPUT_DIR_PLOT, f"Res_{res_id}.png"), dpi=300)
             res_conv.close()
 
 
@@ -162,7 +168,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Run constant-pH MD analysis and generate plots.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
- 
+
     # --- Paths (required) ---
     parser.add_argument('--lambdaref-path', type=str, required=True,
                         help="Directory containing lambdareference.dat")
@@ -183,42 +189,40 @@ if __name__ == "__main__":
                         default='Debug',
                         help="Debug shows coord IDs in titles; "
                              "Publication shows residue names")
- 
+
     # --- Grid dimensions ---
     parser.add_argument('--plot-rows', type=int, default=21,
                         help="Number of rows in the overview plot grids")
     parser.add_argument('--plot-cols', type=int, default=5,
                         help="Number of columns in the overview plot grids")
- 
+
     # --- Labels ---
     parser.add_argument('--no-single-letter', dest='single_letter',
                         action='store_false',
                         help="Use three-letter amino acid codes instead of one-letter")
     parser.set_defaults(single_letter=True)
- 
+
     # --- Output options ---
     parser.add_argument('--npz-output', action='store_true', default=False,
                         help="Save protonation data as .npz files")
     parser.add_argument('--dpi', type=int, default=300,
                         help="DPI for saved figures")
- 
+
     # --- Performance ---
     parser.add_argument('--threads', type=int, default=8,
                         help="Number of threads for parallel XVG loading")
     parser.add_argument('--xvg-rows', type=int, default=2000000,
                         help="Maximum number of rows to read per XVG file")
- 
+
     # --- Multi-chain ---
     parser.add_argument('--chains', nargs='+', default=None,
                         help="Chain identifiers for homomeric systems (e.g. A B)")
- 
 
- 
     # --- Profiling ---
     parser.add_argument('--profile', action='store_true',
                         help="Enable profiling with cProfile")
 
-    argcomplete.autocomplete(parser) 
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
     if args.profile:

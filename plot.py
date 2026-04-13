@@ -40,7 +40,7 @@ def _group_coordids_by_resname(coordids, lambda_ref):
     return groups
 
 
-def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug',single_letter=False):
+def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug', single_letter=False):
     """Plot histogram of lambda values"""
     # Set up the grid size
     # Create a figure with subplots
@@ -76,7 +76,8 @@ def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, q
                     ax.set_title(
                         f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
                 elif quality == 'Publication':
-                    rn = _display_resname(lambda_ref.iloc[coordid-1]["resname"], single_letter)
+                    rn = _display_resname(
+                        lambda_ref.iloc[coordid-1]["resname"], single_letter)
                     ax.set_title(f'{rn}{lambda_ref.iloc[coordid-1]["resid"]}')
             else:
                 continue
@@ -159,7 +160,8 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
                     ax.set_title(
                         f'coord_{coordid}-lambda_{coord2lambda_dict[coordid]}')
                 elif quality == 'Publication':
-                    rn = _display_resname(lambda_ref.iloc[coordid-1]["resname"], single_letter)
+                    rn = _display_resname(
+                        lambda_ref.iloc[coordid-1]["resname"], single_letter)
                     ax.set_title(f'{rn}{lambda_ref.iloc[coordid-1]["resid"]}')
 
             else:
@@ -309,14 +311,14 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
                 rn = lambda_ref.iloc[index]['resname']
                 np.savez(f"{npz_dir}/{rn}_{resid}_protonation_fraction.npz",
                          res_prot_avg=proton_avg, res_prot_se=proton_se)
-        
+
         group_data[resname] = (labels, avgs, ses)
 
     # --- Layout: bin-pack groups into rows so small groups share a line ---
     groups_list = [(rn, lbl, avg, se)
                    for rn, (lbl, avg, se) in group_data.items()]
     max_slots = max(len(g[1]) for g in groups_list)
- 
+
     layout_rows = []   # each element: list of (resname, labels, avgs, ses)
     current_row = []
     current_slots = 0
@@ -331,24 +333,24 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
             current_slots += n_bars
     if current_row:
         layout_rows.append(current_row)
- 
+
     # --- Figure dimensions (publication-ready) ---
     fig_width = 7.0       # inches, typical double-column width
     row_height = 2.2      # inches per row
     n_rows = len(layout_rows)
     fig = plt.figure(figsize=(fig_width, row_height * n_rows))
- 
+
     outer_gs = GridSpec(n_rows, 1, figure=fig, hspace=0.55)
- 
+
     bar_color = "#4472C4"
     bar_width = 0.5
- 
+
     for row_idx, row_groups in enumerate(layout_rows):
         # Width ratios proportional to bar count → equal physical bar width
         width_ratios = [len(g[1]) for g in row_groups]
         inner_gs = outer_gs[row_idx].subgridspec(
             1, len(row_groups), width_ratios=width_ratios, wspace=0.35)
- 
+
         for col_idx, (resname, labels, avgs, ses) in enumerate(row_groups):
             ax = fig.add_subplot(inner_gs[0, col_idx])
             n = len(avgs)
@@ -360,7 +362,7 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
             ax.bar_label(bars,
                          labels=[f"{a:.2f}" for a in avgs],
                          padding=3, fontsize=6)
- 
+
             display_name = _display_resname(resname, single_letter)
             res_labels = [f"{display_name}{lid}" for lid in labels]
             ax.set_xticks(x)
@@ -371,11 +373,11 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
             ax.tick_params(axis='both', which='both', labelsize=8)
- 
+
             # Only leftmost axis in each row gets the y-label
             if col_idx == 0:
                 ax.set_ylabel("Protonation Fraction", fontsize=9)
-                
+
     return fig
 
 
@@ -384,7 +386,8 @@ def single_residue_convergence(coordid, xvg_data_list: List[XVGData], lambda_ref
 
     res_fractions = []
 
-    display_name = _display_resname(lambda_ref.iloc[coordid-1]["resname"], single_letter)
+    display_name = _display_resname(
+        lambda_ref.iloc[coordid-1]["resname"], single_letter)
     display_id = lambda_ref.iloc[coordid-1]["resid"]
     for xvg_data in xvg_data_list:
         res_fractions.append(get_protonation_timeseries(
