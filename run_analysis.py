@@ -4,13 +4,13 @@ import cProfile
 import pstats
 import argcomplete
 import argparse
-from analyses import *
-from plot import *
 import pandas as pd
 import sys
 import os
 # caution: path[0] is reserved for script path (or '' in REPL)
 sys.path.insert(1, 'constant-ph-utils/')
+from analyses import *
+from plot import *
 
 
 ###### Main function #######
