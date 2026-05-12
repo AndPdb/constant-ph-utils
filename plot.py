@@ -348,8 +348,11 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
     for row_idx, row_groups in enumerate(layout_rows):
         # Width ratios proportional to bar count → equal physical bar width
         width_ratios = [len(g[1]) for g in row_groups]
+        # Make the gap between subplots match the gap between bars within a subplot
+        avg_data_range = np.mean(width_ratios)
+        wspace = (1.0 - bar_width) / avg_data_range
         inner_gs = outer_gs[row_idx].subgridspec(
-            1, len(row_groups), width_ratios=width_ratios, wspace=0.35)
+            1, len(row_groups), width_ratios=width_ratios, wspace=wspace)
 
         for col_idx, (resname, labels, avgs, ses) in enumerate(row_groups):
             ax = fig.add_subplot(inner_gs[0, col_idx])
@@ -377,6 +380,8 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
             # Only leftmost axis in each row gets the y-label
             if col_idx == 0:
                 ax.set_ylabel("Protonation Fraction", fontsize=9)
+            else:
+                ax.set_yticklabels([])
 
     return fig
 
