@@ -265,7 +265,8 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
 
 
 def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
-                              chain_mapping={}, npz_output=False, single_letter=False):
+                              chain_mapping={}, npz_output=False, single_letter=False,
+                              max_bars_per_subplot=25):
     """Plot protonation fractions, one figure per residue type.
     All residues of the same type are shown as bars on a single axis.
     """
@@ -315,8 +316,19 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
         group_data[resname] = (labels, avgs, ses)
 
     # --- Layout: bin-pack groups into rows so small groups share a line ---
-    groups_list = [(rn, lbl, avg, se)
-                   for rn, (lbl, avg, se) in group_data.items()]
+    # Split large groups into chunks so no subplot has more than max_bars_per_subplot bars
+    groups_list = []
+
+    for rn, (lbl, avg, se) in group_data.items():
+        n = len(lbl)
+        if n <= max_bars_per_subplot:
+            groups_list.append((rn, lbl, avg, se))
+        else:
+            for i in range(0, n, max_bars_per_subplot):
+                groups_list.append((rn, lbl[i:i+max_bars_per_subplot],
+                                    avg[i:i+max_bars_per_subplot],
+                                    se[i:i+max_bars_per_subplot]))
+
     max_slots = max(len(g[1]) for g in groups_list)
 
     layout_rows = []   # each element: list of (resname, labels, avgs, ses)
@@ -335,55 +347,115 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
         layout_rows.append(current_row)
 
     # --- Figure dimensions (publication-ready) ---
-    fig_width = 7.0       # inches, typical double-column width
-    row_height = 2.2      # inches per row
-    n_rows = len(layout_rows)
-    fig = plt.figure(figsize=(fig_width, row_height * n_rows))
+        # --- Figure dimensions (publication-ready, fixed size) ---
+    fig_width = 180 / 25.4       # mm → inches
+    max_fig_height = 170 / 25.4      # mm → inches
+    row_height = 2.2             # inches per row (including labels + padding)
+    rows_per_figure = max(1, int(max_fig_height / row_height))
 
-    outer_gs = GridSpec(n_rows, 1, figure=fig, hspace=0.55)
+#    fig_width = 7.0       # inches, typical double-column width
+ #   row_height = 2.2      # inches per row
+  #  n_rows = len(layout_rows)
+   # fig = plt.figure(figsize=(fig_width, row_height * n_rows))
 
+#    outer_gs = GridSpec(n_rows, 1, figure=fig, hspace=0.55)
+
+    # --- Group rows so that no residue type is split across figures ---
+    # 1. Find the row-span of each residue type
+    resname_spans = {}
+    for i, row in enumerate(layout_rows):
+        for g in row:
+            rn = g[0]
+            if rn not in resname_spans:
+                resname_spans[rn] = [i, i]
+            else:
+                resname_spans[rn][1] = i
+
+    # 2. Merge overlapping spans (e.g. ASP rows 0-1 + ARG rows 1-2 → block 0-2)
+    spans = sorted(resname_spans.values())
+    merged_blocks = [spans[0]]
+    for start, end in spans[1:]:
+        if start <= merged_blocks[-1][1]:
+            merged_blocks[-1][1] = max(merged_blocks[-1][1], end)
+        else:
+            merged_blocks.append([start, end])
+ 
+    # 3. Pack merged blocks into figures, never splitting a block
+    figure_pages = []
+    current_page = []
+    current_row_count = 0
+    for start, end in merged_blocks:
+        block_rows = layout_rows[start:end + 1]
+        block_size = len(block_rows)
+        if current_row_count + block_size <= rows_per_figure:
+            current_page.extend(block_rows)
+            current_row_count += block_size
+        else:
+            if current_page:
+                figure_pages.append(current_page)
+            current_page = list(block_rows)
+            current_row_count = block_size
+    if current_page:
+        figure_pages.append(current_page)
+
+    # --- Render each figure page ---
+    figures = []
     bar_color = "#4472C4"
     bar_width = 0.5
 
-    for row_idx, row_groups in enumerate(layout_rows):
-        # Width ratios proportional to bar count → equal physical bar width
-        width_ratios = [len(g[1]) for g in row_groups]
-        # Make the gap between subplots match the gap between bars within a subplot
-        avg_data_range = np.mean(width_ratios)
-        wspace = (1.0 - bar_width) / avg_data_range
-        inner_gs = outer_gs[row_idx].subgridspec(
-            1, len(row_groups), width_ratios=width_ratios, wspace=wspace)
+    # for fig_start in range(0, len(layout_rows), rows_per_figure):
+    #     fig_rows = layout_rows[fig_start:fig_start + rows_per_figure]
+    #     n_fig_rows = len(fig_rows)
+    
+    for fig_rows in figure_pages:
+        n_fig_rows = len(fig_rows)
 
-        for col_idx, (resname, labels, avgs, ses) in enumerate(row_groups):
-            ax = fig.add_subplot(inner_gs[0, col_idx])
-            n = len(avgs)
-            x = np.arange(n)
-            bars = ax.bar(x, avgs, yerr=ses, capsize=3, width=bar_width,
-                          color=bar_color, edgecolor=bar_color,
-                          error_kw=dict(lw=0.8, capthick=0.8))
+        fig_height = min(max_fig_height, n_fig_rows * row_height)
+        fig = plt.figure(figsize=(fig_width, fig_height))
+        outer_gs = GridSpec(n_fig_rows, 1, figure=fig, hspace=0.55,
+                            top=1.0 - 0.02, bottom=0.08)
 
-            ax.bar_label(bars,
-                         labels=[f"{a:.2f}" for a in avgs],
-                         padding=3, fontsize=6)
+        for row_idx, row_groups in enumerate(fig_rows):
+            # Width ratios proportional to bar count → equal physical bar width
+            width_ratios = [len(g[1]) + 1 for g in row_groups]
+            # Make the gap between subplots match the gap between bars within a subplot
+            avg_data_range = np.mean(width_ratios)
+            wspace = (1.0 - bar_width) / avg_data_range
+            inner_gs = outer_gs[row_idx].subgridspec(
+                1, len(row_groups), width_ratios=width_ratios, wspace=wspace)
 
-            display_name = _display_resname(resname, single_letter)
-            res_labels = [f"{display_name}{lid}" for lid in labels]
-            ax.set_xticks(x)
-            ax.set_xticklabels(res_labels, fontsize=8, rotation=45, ha='right')
-            ax.set_xlim(-0.5, n - 0.5)
-            ax.set_ylim(0.0, 1.15)
-            ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            ax.tick_params(axis='both', which='both', labelsize=8)
+            for col_idx, (resname, labels, avgs, ses) in enumerate(row_groups):
+                ax = fig.add_subplot(inner_gs[0, col_idx])
+                n = len(avgs)
+                x = np.arange(n)
+                bars = ax.bar(x, avgs, yerr=ses, capsize=3, width=bar_width,
+                            color=bar_color, edgecolor=bar_color,
+                            error_kw=dict(lw=0.8, capthick=0.8))
 
-            # Only leftmost axis in each row gets the y-label
-            if col_idx == 0:
-                ax.set_ylabel("Protonation Fraction", fontsize=9)
-            else:
-                ax.set_yticklabels([])
+                ax.bar_label(bars,
+                            labels=[f"{a:.2f}" for a in avgs],
+                            padding=3, fontsize=6)
 
-    return fig
+                display_name = _display_resname(resname, single_letter)
+                res_labels = [f"{display_name}{lid}" for lid in labels]
+                ax.set_xticks(x)
+                ax.set_xticklabels(res_labels, fontsize=8, rotation=45, ha='right')
+                ax.set_xlim(-1.0, n)
+                ax.set_ylim(0.0, 1.15)
+                ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+                ax.spines['top'].set_visible(False)
+                ax.spines['right'].set_visible(False)
+                ax.tick_params(axis='both', which='both', labelsize=8)
+
+                # Only leftmost axis in each row gets the y-label
+                if col_idx == 0:
+                    ax.set_ylabel("Protonation Fraction", fontsize=9)
+                else:
+                    ax.set_yticklabels([])
+
+        figures.append(fig)
+
+    return figures
 
 
 def single_residue_convergence(coordid, xvg_data_list: List[XVGData],time, lambda_ref, chain_mapping={}, single_letter=True):

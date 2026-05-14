@@ -147,12 +147,21 @@ def main(args):
         proton_conv.close()
 
         # ## Overview protonation fractions
-        fig = plot_protonation_fraction(
+        # fig = plot_protonation_fraction(
+        #     xvg_data_list, lambda_ref, chain_mapping=mapping,
+        #     npz_output=NPZ_OUTPUT,  single_letter=SINGLE_LETTER)
+        # fig.savefig(os.path.join(
+        #     OUTPUT_DIR_PLOT, f"{CONVERG_PREFIX}_protonfraction.png"), bbox_inches='tight', dpi=300)
+        # plt.close(fig)
+
+        figures = plot_protonation_fraction(
             xvg_data_list, lambda_ref, chain_mapping=mapping,
             npz_output=NPZ_OUTPUT,  single_letter=SINGLE_LETTER)
-        fig.savefig(os.path.join(
-            OUTPUT_DIR_PLOT, f"{CONVERG_PREFIX}_protonfraction.png"), bbox_inches='tight', dpi=300)
-        plt.close(fig)
+        for i, fig in enumerate(figures):
+            suffix = f"_{i+1}" if len(figures) > 1 else ""
+            fig.savefig(os.path.join(OUTPUT_DIR_PLOT,
+                f"{CONVERG_PREFIX}_protonfraction{suffix}.png"), bbox_inches='tight', dpi=300)
+            plt.close(fig)
 
         # ## Sigle residue protonation fraction time series
         if RES_IDS:
