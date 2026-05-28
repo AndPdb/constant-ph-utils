@@ -160,8 +160,8 @@ python run_analysis.py \
   --dir-plot plots/
 ```
 
-This runs in `Publication` mode (the default), producing all plot types.
-In case of single trajectory, run in `Debug` mode.
+- This runs in `Publication` mode (the default), producing all plot types.
+- In case of **single trajectory**, run in `Debug` mode.
 
 ### Full CLI Reference
 
