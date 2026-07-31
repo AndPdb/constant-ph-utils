@@ -490,7 +490,7 @@ def single_residue_convergence(coordid, xvg_data_list: List[XVGData],time, lambd
     xticks = np.concatenate((xticks, [length]))
  
     plt.xticks(xticks.astype(int), (xticks/1000).astype(int))
-    plt.ylim(0, 1)
+    plt.ylim(0, 1.1)
     plt.ylabel("Protonation fraction")
     plt.xlabel("Time (ns)")
     plt.legend()
