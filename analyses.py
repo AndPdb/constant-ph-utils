@@ -111,26 +111,36 @@ def calculate_fractions(array_xvg: np.ndarray) -> Tuple[float, float]:
     deprot_frac = deprot.sum() / total
     return prot_frac, deprot_frac
 
+def get_replica_fractions(coord_id: int, xvg_data_list: List[XVGData], chain_mapping={}) -> Tuple[List[float], List[float]]:
+    """
+    Per-replica protonation/deprotonation fractions for a single coordinate.
+    One value per XVGData in xvg_data_list (replicas without data are skipped).
+    """
+    prot_fractions = []
+    deprot_fractions = []
+
+    for xvg_data in xvg_data_list:
+        try:
+            array_xvg = xvg_data[coord_id]
+        except KeyError:
+            array_xvg = xvg_data[chain_mapping[coord_id]]
+
+        if array_xvg.size > 0:
+            prot_frac, deprot_frac = calculate_fractions(array_xvg)
+            prot_fractions.append(prot_frac)
+            deprot_fractions.append(deprot_frac)
+
+    return prot_fractions, deprot_fractions
+
 
 def get_statistics(coord_id: int, xvg_data_list: List[XVGData], chain_mapping={}) -> Tuple[float, float, float, float]:
     """
     Reads XVG files from replicas and computes statistics on protonation fractions.
     Returns averages and standard errors for protonation and deprotonation.
     """
-    # Initialize lists to store fractions from different replicas
-    prot_fractions = []
-    deprot_fractions = []
-    # Iterate over directories (replicas)
-    for xvg_data in xvg_data_list:
-        try:
-            array_xvg = xvg_data[coord_id]
-        except KeyError:
-            # If the coordinate is missing in this replica, skip it
-            array_xvg = xvg_data[chain_mapping[coord_id]]
-        if array_xvg.size > 0:
-            prot_frac, deprot_frac = calculate_fractions(array_xvg)
-            prot_fractions.append(prot_frac)
-            deprot_fractions.append(deprot_frac)
+    prot_fractions, deprot_fractions = get_replica_fractions(
+        coord_id, xvg_data_list, chain_mapping)
+
     # Calculate average and standard error for protonation and deprotonation
     prot_avg = np.mean(prot_fractions)
     deprot_avg = np.mean(deprot_fractions)
@@ -182,13 +192,10 @@ def calculate_histidine_fractions(array_xvgs: List[np.ndarray]) -> float:
 
     return prot_frac
 
-
-def get_histidine_statistics(coord_ids: List[int], xvg_data_list: List[XVGData], chain_mapping={}) -> Tuple[float, float]:
-    """
-    Reads XVG files for histidines and computes statistics on protonation fractions.
-    """
-    # Initialize a list to store protonation fractions
+def get_histidine_replica_fractions(coord_ids: List[int], xvg_data_list: List[XVGData], chain_mapping={}) -> List[float]:
+    """Per-replica protonation fraction for a histidine (3-coordinate group)."""
     prot_fractions = []
+
     # Iterate over directories (replicas)
     for xvg_data in xvg_data_list:
         # Read XVG data for each histidine coordinate
@@ -197,10 +204,19 @@ def get_histidine_statistics(coord_ids: List[int], xvg_data_list: List[XVGData],
         except KeyError:
             # If any coordinate is missing, skip this replica
             histidine_data = [xvg_data[chain_mapping[coord_id]]
-                              for coord_id in coord_ids]
+                            for coord_id in coord_ids]
         # Calculate the protonation fraction for this replica
-        prot_frac = calculate_histidine_fractions(histidine_data)
-        prot_fractions.append(prot_frac)
+        prot_fractions.append(calculate_histidine_fractions(histidine_data))
+
+    return prot_fractions
+
+
+def get_histidine_statistics(coord_ids: List[int], xvg_data_list: List[XVGData], chain_mapping={}) -> Tuple[float, float]:
+    """
+    Reads XVG files for histidines and computes statistics on protonation fractions.
+    """
+    prot_fractions = get_histidine_replica_fractions(
+        coord_ids, xvg_data_list, chain_mapping)
     # Calculate average and standard error for protonation
     prot_avg = np.mean(prot_fractions)
     prot_se = np.std(prot_fractions, ddof=1) / np.sqrt(len(prot_fractions))

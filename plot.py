@@ -266,7 +266,7 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
 
 def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
                               chain_mapping={}, npz_output=False, single_letter=False,
-                              max_bars_per_subplot=25):
+                              max_bars_per_subplot=25, show_replicas=True):
     """Plot protonation fractions, one figure per residue type.
     All residues of the same type are shown as bars on a single axis.
     """
@@ -279,11 +279,13 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
             os.makedirs(npz_dir)
 
     # Collect per-group data first so we can size the figure
-    group_data = OrderedDict()  # {resname: (labels, avgs, ses)}
+    group_data = OrderedDict()  # {resname: (labels, avgs, ses, reps)}
     for resname, cids in groups.items():
         labels = []
         avgs = []
         ses = []
+        reps = []
+
         prv_resid = 0
         seen_resids = set()
 
@@ -300,34 +302,40 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
                     prv_resid = resid
                 proton_avg, proton_se = get_histidine_statistics(
                     hist_coordids, xvg_data_list, chain_mapping)
+                proton_reps = get_histidine_replica_fractions(
+                    hist_coordids, xvg_data_list, chain_mapping)
             else:
                 proton_avg, deproton_avg, proton_se, deproton_se = \
                     get_statistics(coordid, xvg_data_list, chain_mapping)
+                proton_reps, _ = get_replica_fractions(
+                    coordid, xvg_data_list, chain_mapping)
 
             labels.append(str(resid))
             avgs.append(proton_avg)
             ses.append(proton_se)
+            reps.append(proton_reps)
 
             if npz_output:
                 rn = lambda_ref.iloc[index]['resname']
                 np.savez(f"{npz_dir}/{rn}_{resid}_protonation_fraction.npz",
                          res_prot_avg=proton_avg, res_prot_se=proton_se)
 
-        group_data[resname] = (labels, avgs, ses)
+        group_data[resname] = (labels, avgs, ses, reps)
 
     # --- Layout: bin-pack groups into rows so small groups share a line ---
     # Split large groups into chunks so no subplot has more than max_bars_per_subplot bars
     groups_list = []
 
-    for rn, (lbl, avg, se) in group_data.items():
+    for rn, (lbl, avg, se, rep) in group_data.items():
         n = len(lbl)
         if n <= max_bars_per_subplot:
-            groups_list.append((rn, lbl, avg, se))
+            groups_list.append((rn, lbl, avg, se, rep))
         else:
             for i in range(0, n, max_bars_per_subplot):
                 groups_list.append((rn, lbl[i:i+max_bars_per_subplot],
                                     avg[i:i+max_bars_per_subplot],
-                                    se[i:i+max_bars_per_subplot]))
+                                    se[i:i+max_bars_per_subplot],
+                                    rep[i:i+max_bars_per_subplot]))
 
     max_slots = max(len(g[1]) for g in groups_list)
 
@@ -402,6 +410,10 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
     figures = []
     bar_color = "#4472C4"
     bar_width = 0.5
+    dot_color = "#333333"
+    dot_spread = 0.12
+    y_top = 1.15
+    label_pad = 5
 
     # for fig_start in range(0, len(layout_rows), rows_per_figure):
     #     fig_rows = layout_rows[fig_start:fig_start + rows_per_figure]
@@ -424,7 +436,7 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
             inner_gs = outer_gs[row_idx].subgridspec(
                 1, len(row_groups), width_ratios=width_ratios, wspace=wspace)
 
-            for col_idx, (resname, labels, avgs, ses) in enumerate(row_groups):
+            for col_idx, (resname, labels, avgs, ses, reps) in enumerate(row_groups):
                 ax = fig.add_subplot(inner_gs[0, col_idx])
                 n = len(avgs)
                 x = np.arange(n)
@@ -432,9 +444,41 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
                             color=bar_color, edgecolor=bar_color,
                             error_kw=dict(lw=0.8, capthick=0.8))
 
+                # Per-replica averages as a dot plot on top of each bar
+                dot_top = np.full(n, -np.inf)
+                if show_replicas:
+                    dot_x, dot_y = [], []
+                    for i_bar, (xi, rep_vals) in enumerate(zip(x, reps)):
+                        rep_vals = np.asarray(rep_vals, dtype=float)
+                        if rep_vals.size == 0:
+                            continue
+                        offsets = (np.linspace(-dot_spread, dot_spread, rep_vals.size)
+                                   if rep_vals.size > 1 else np.zeros(1))
+                        dot_x.extend(xi + offsets)
+                        dot_y.extend(rep_vals)
+                        dot_top[i_bar] = rep_vals.max()
+                    ax.scatter(dot_x, dot_y, s=6, facecolors='white',
+                               edgecolors=dot_color, linewidths=0.5, zorder=5)
+
+                # Keep bar_label where nothing is in the way; re-anchor to the
+                # top dot only on the bars where the label would overlap it
+                cap = np.asarray(avgs, dtype=float) + \
+                    np.nan_to_num(np.asarray(ses, dtype=float))
+                ax_pts = ax.get_window_extent().height * 72.0 / fig.dpi
+                pts_per_unit = ax_pts / y_top
+                r_pts = np.sqrt(6.0 / np.pi)
+                clash = (dot_top - cap) * pts_per_unit + r_pts > label_pad
+
                 ax.bar_label(bars,
-                            labels=[f"{a:.2f}" for a in avgs],
-                            padding=3, fontsize=6)
+                            labels=["" if c else f"{a:.2f}"
+                                    for a, c in zip(avgs, clash)],
+                            padding=label_pad, fontsize=6)
+                for xi, a, t, c in zip(x, avgs, dot_top, clash):
+                    if c:
+                        ax.annotate(f"{a:.2f}", (xi, t),
+                                    textcoords="offset points",
+                                    xytext=(0, label_pad),
+                                    ha="center", va="bottom", fontsize=6)
 
                 display_name = _display_resname(resname, single_letter)
                 res_labels = [f"{display_name}{lid}" for lid in labels]
