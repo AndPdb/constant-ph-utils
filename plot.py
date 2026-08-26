@@ -355,18 +355,10 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
         layout_rows.append(current_row)
 
     # --- Figure dimensions (publication-ready) ---
-        # --- Figure dimensions (publication-ready, fixed size) ---
     fig_width = 180 / 25.4       # mm → inches
     max_fig_height = 170 / 25.4      # mm → inches
     row_height = 2.2             # inches per row (including labels + padding)
     rows_per_figure = max(1, int(max_fig_height / row_height))
-
-#    fig_width = 7.0       # inches, typical double-column width
- #   row_height = 2.2      # inches per row
-  #  n_rows = len(layout_rows)
-   # fig = plt.figure(figsize=(fig_width, row_height * n_rows))
-
-#    outer_gs = GridSpec(n_rows, 1, figure=fig, hspace=0.55)
 
     # --- Group rows so that no residue type is split across figures ---
     # 1. Find the row-span of each residue type
@@ -414,10 +406,6 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
     dot_spread = 0.12
     y_top = 1.15
     label_pad = 5
-
-    # for fig_start in range(0, len(layout_rows), rows_per_figure):
-    #     fig_rows = layout_rows[fig_start:fig_start + rows_per_figure]
-    #     n_fig_rows = len(fig_rows)
     
     for fig_rows in figure_pages:
         n_fig_rows = len(fig_rows)

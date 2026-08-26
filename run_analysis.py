@@ -146,14 +146,6 @@ def main(args):
             OUTPUT_DIR_PLOT, f"{CONVERG_PREFIX}_convergence.png"), dpi=300)
         proton_conv.close()
 
-        # ## Overview protonation fractions
-        # fig = plot_protonation_fraction(
-        #     xvg_data_list, lambda_ref, chain_mapping=mapping,
-        #     npz_output=NPZ_OUTPUT,  single_letter=SINGLE_LETTER)
-        # fig.savefig(os.path.join(
-        #     OUTPUT_DIR_PLOT, f"{CONVERG_PREFIX}_protonfraction.png"), bbox_inches='tight', dpi=300)
-        # plt.close(fig)
-
         figures = plot_protonation_fraction(
             xvg_data_list, lambda_ref, chain_mapping=mapping,
             npz_output=NPZ_OUTPUT,  single_letter=SINGLE_LETTER)
