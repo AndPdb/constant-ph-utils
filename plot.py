@@ -476,7 +476,7 @@ def single_residue_convergence(coordid, xvg_data_list: List[XVGData],time, lambd
     total_protarray = np.vstack(
         [res_frac[:min_length] for res_frac in res_fractions])
 
-    total_protonse = np.std(total_protarray, axis=0) / \
+    total_protonse = np.std(total_protarray, axis=0, ddof=1) / \
         np.sqrt(len(total_protarray))
 
     plt.plot(np.mean(total_protarray, axis=0),
