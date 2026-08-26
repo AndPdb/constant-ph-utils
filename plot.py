@@ -232,7 +232,7 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
                 total_protarray = np.vstack(
                     [res_array[:min_length] for res_array in list_residues])
                 total_protonse = np.std(
-                    total_protarray, axis=0) / np.sqrt(len(total_protarray))
+                    total_protarray, axis=0, ddof=1) / np.sqrt(len(total_protarray))
                 ax.plot(np.mean(total_protarray, axis=0))
                 ax.fill_between(np.arange(len(total_protarray[0, :])), np.mean(
                     total_protarray, axis=0) - total_protonse, np.mean(total_protarray, axis=0) + total_protonse, alpha=0.5)
@@ -339,7 +339,7 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
 
     max_slots = max(len(g[1]) for g in groups_list)
 
-    layout_rows = []   # each element: list of (resname, labels, avgs, ses)
+    layout_rows = []   # each element: list of (resname, labels, avgs, ses, reps)
     current_row = []
     current_slots = 0
     for g in groups_list:
