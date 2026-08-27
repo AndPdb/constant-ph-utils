@@ -101,6 +101,7 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
     coordid = xvg_data.coordids[0]
     index_coordid = copy.deepcopy(xvg_data.coordids[0])
     prv_resid = 0
+    plot_points = 2000
 
     # Generate and plot data for each subplot
     if quality == 'Debug':
@@ -145,7 +146,9 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
                     np.savez(
                         f"{xvg_data.analysis_dir}/{resname}_{resid}_protonation_timeseries.npz", res_prot_ts=res_prot_ts)
 
-                ax.plot(res_prot_ts, label="MD1")
+                stride = max(1, len(res_prot_ts) // plot_points)
+                ax.plot(np.arange(0, len(res_prot_ts), stride),
+                       res_prot_ts[::stride], label="MD1")
                 ax.set_ylim(-0.1, 1.1)
 
                 # Set xticks and labels aaccording to the simulation time
@@ -184,6 +187,7 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
     dimensions = len(xvg_data_list[0].coordids)
     coordid = 1
     prv_resid = 0
+    plot_points = 2000
 
     # Generate and plot data for each subplot
     if quality == 'Debug':
@@ -233,6 +237,19 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
                     [res_array[:min_length] for res_array in list_residues])
                 total_protonse = np.std(
                     total_protarray, axis=0, ddof=1) / np.sqrt(len(total_protarray))
+
+                total_protmean = np.mean(total_protarray, axis=0)
+
+                # Draw at most `plot_points` vertices per panel. x stays in
+                # frame units, so the tick positions below remain valid.
+                stride = max(1, min_length // plot_points)
+                xs = np.arange(0, min_length, stride)
+                ax.plot(xs, total_protmean[::stride])
+                ax.fill_between(xs,
+                                (total_protmean - total_protonse)[::stride],
+                                (total_protmean + total_protonse)[::stride],
+                                alpha=0.5)
+                
                 ax.plot(np.mean(total_protarray, axis=0))
                 ax.fill_between(np.arange(len(total_protarray[0, :])), np.mean(
                     total_protarray, axis=0) - total_protonse, np.mean(total_protarray, axis=0) + total_protonse, alpha=0.5)
