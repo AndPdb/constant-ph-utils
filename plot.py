@@ -473,7 +473,7 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
                 ax.set_xticks(x)
                 ax.set_xticklabels(res_labels, fontsize=8, rotation=45, ha='right')
                 ax.set_xlim(-1.0, n)
-                ax.set_ylim(0.0, 1.15)
+                ax.set_ylim(0.0, y_top)
                 ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
                 ax.spines['top'].set_visible(False)
                 ax.spines['right'].set_visible(False)
