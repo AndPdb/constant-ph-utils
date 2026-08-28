@@ -179,7 +179,7 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
 
 
 def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGData], coord2lambda_dict, lambda_ref, chain_mapping={}, rows=20, cols=5, quality='Debug', single_letter=False):
-    """Plot protonation avg and standard error time-series. Just two replicas supported - add get_protfrac_ts if more than 2"""
+    """Plot protonation avg and standard error time-series."""
     # Set up the grid size
     # Create a figure with subplots
     # Adjusted figure size for 5x20 layout
@@ -504,7 +504,7 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
 
 
 def single_residue_convergence(coordid, xvg_data_list: List[XVGData],time, lambda_ref, chain_mapping={}, single_letter=True):
-    """THIS WORKS ONLY FOR NON HISTIDINES! Plot convergence of single residue. Just two replicas supported - add res_fracX if more."""
+    """THIS WORKS ONLY FOR NON HISTIDINES! Plot convergence of single residue."""
 
     res_fractions = []
 

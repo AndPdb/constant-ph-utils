@@ -35,7 +35,7 @@ This toolkit loads those files in parallel, classifies frames as protonated (λ 
 - **Lambda histograms** — distribution of λ values per residue.
 - **Protonation time series** — cumulative protonation fraction over time.
 - **Convergence plots** — mean ± SE across replicas as a function of simulation time.
-- **Protonation fraction bar charts** — publication-ready panels grouped by residue type, with error bars from replica statistics.
+- **Protonation fraction bar charts** — publication-ready panels grouped by residue type, with mean ± SE error bars and one dot per replica overlaid on each bar.
 - **Single-residue convergence** — focused convergence view for residues of interest.
 
 All plots support both a `Debug` mode (coordinate IDs in titles) and a `Publication` mode (residue names, clean styling).
@@ -46,6 +46,8 @@ All plots support both a `Debug` mode (coordinate IDs in titles) and a `Publicat
 
 ```
 constant-ph-utils/
+├── plot/                        # Test plotting
+├── test/                        # Test input file
 ├── analyses.py                  # Data loading, statistics, time series
 ├── plot.py                      # All plotting functions
 ├── run_analysis.py              # CLI entry point
@@ -59,10 +61,14 @@ constant-ph-utils/
 - **Python ≥ 3.10** (uses `int | slice | tuple` union syntax)
 - **NumPy**
 - **pandas**
-- **matplotlib ≥ 3.3** (uses `GridSpec.subgridspec` and `bar_label`)
+- **matplotlib ≥ 3.4** (uses `GridSpec.subgridspec` and `bar_label`)
 - **argcomplete** (optional, for shell tab-completion of CLI flags)
 
 All other imports (`dataclasses`, `concurrent.futures`, `argparse`, `cProfile`, etc.) are part of the Python standard library.
+
+**Memory:** all λ data is held in RAM — roughly `16 × n_frames × n_coordinates × n_replicas`
+bytes (e.g. ~3.8 GB per replica for 120 coordinates × 2M frames). Reduce `--xvg-rows`
+to your actual frame count and lower `--threads` if you hit an OOM kill.
 
 ---
 
@@ -258,7 +264,7 @@ All figures are saved in the directory specified by `--dir-plot`. The directory 
 | `<dir-plot>/{MD}_histograms.png` | `plot_lambda_hist` | Always |
 | `<dir-plot>/{MD}_timeseries.png` | `plot_protonation_timeseries` | Always |
 | `<dir-plot>/{prefix}_convergence.png` | `plot_protonation_convergence` | Publication |
-| `<dir-plot>/{prefix}_protonfraction.png` | `plot_protonation_fraction` | Publication |
+| `<dir-plot>/{prefix}_protonfraction{_N}.png` | `plot_protonation_fraction` | Publication |
 | `<dir-plot>/Res_{resid}.png` | `single_residue_convergence` | Publication + `--res-ids` |
 | `npz_protfrac/*.npz` | statistics export | `--npz-output` |
 
@@ -282,14 +288,17 @@ Where `{prefix}` is automatically derived by joining the parent directory names 
 | Function | Description |
 |---|---|
 | `calculate_fractions(array_xvg)` | Classifies frames as protonated (λ < 0.2) or deprotonated (λ > 0.8) and returns both fractions. |
+| `get_replica_fractions(coord_id, xvg_data_list)` | Per-replica protonation/deprotonation fractions for one coordinate — one value per replica. |
 | `get_statistics(coord_id, xvg_data_list)` | Computes mean ± SE of protonation/deprotonation fractions across replicas. |
 | `get_protonation_timeseries(coord_id, xvg_data)` | Cumulative protonation fraction as a function of frame index. |
+
 
 **Histidine-specific** (three λ-coordinates per residue — HSP, HSD, HSE):
 
 | Function | Description |
 |---|---|
 | `calculate_histidine_fractions(array_xvgs)` | Protonation fraction from the three-state model. |
+| `get_histidine_replica_fractions(coord_ids, xvg_data_list)` | Per-replica protonation fraction for a histidine, one value per replica. |
 | `get_histidine_statistics(coord_ids, xvg_data_list)` | Mean ± SE across replicas for histidines. |
 | `get_histidine_protonation_timeseries(coord_ids, xvg_data)` | Cumulative protonation time series for histidines. |
 
@@ -307,7 +316,7 @@ Where `{prefix}` is automatically derived by joining the parent directory names 
 | `plot_lambda_hist(...)` | `plt` | Grid of λ-value histograms, one subplot per coordinate. |
 | `plot_protonation_timeseries(...)` | `plt` | Grid of cumulative protonation fraction time series. |
 | `plot_protonation_convergence(...)` | `plt` | Grid of mean ± SE convergence curves across replicas. |
-| `plot_protonation_fraction(...)` | `fig` | Publication-ready bar chart with one axis per residue type. Uses `GridSpec` bin-packing so that all bars have equal physical width and small groups share a row. |
+| `plot_protonation_fraction(...)` | `list[fig]` | Publication-ready bar charts with one axis per residue type, showing mean ± SE bars plus one dot per replica. Uses `GridSpec` bin-packing so that all bars have equal physical width and small groups share a row; splits across multiple figures when there are more panels than fit. |
 | `single_residue_convergence(...)` | `plt` | Single-panel convergence plot for a specific (non-histidine) residue. |
 
 **Helper functions:**
