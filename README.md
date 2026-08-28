@@ -66,9 +66,13 @@ constant-ph-utils/
 
 All other imports (`dataclasses`, `concurrent.futures`, `argparse`, `cProfile`, etc.) are part of the Python standard library.
 
-**Memory:** all λ data is held in RAM — roughly `16 × n_frames × n_coordinates × n_replicas`
+**Memory:**
+- All λ data is held in RAM — roughly `16 × n_frames × n_coordinates × n_replicas`
 bytes (e.g. ~3.8 GB per replica for 120 coordinates × 2M frames). Reduce `--xvg-rows`
 to your actual frame count and lower `--threads` if you hit an OOM kill.
+- The convergence and time-series grids subsample to `plot_points = 2000` vertices per
+panel before drawing (statistics are still computed at full resolution). Lower it in
+`plot.py` if a figure still exhausts memory; raise it for finer curves.
 
 ---
 
@@ -213,7 +217,7 @@ usage: run_analysis.py [-h]
 | `--plot-cols` | `5` | Columns in the overview plot grids |
 | `--no-single-letter` | *(off)* | Use three-letter amino acid codes (default is one-letter) |
 | `--npz-output` | `False` | Save protonation data as `.npz` files |
-| `--threads` | `8` | Parallel threads for XVG loading |
+| `--threads` | `8` | Parallel worker processes for XVG loading |
 | `--xvg-rows` | `2000000` | Max rows to read per XVG file |
 | `--chains` | `None` | Chain identifiers for homomeric systems (e.g. `A B`) |
 | `--profile` | `False` | Enable cProfile profiling |

@@ -20,6 +20,7 @@ def main(args):
     OUTPUT_DIR_PLOT = args.dir_plot
     RES_IDS = args.res_ids
     SINGLE_LETTER = args.single_letter
+    SHOW_REPLICAS = args.show_replicas
     PLOT_ROWS = args.plot_rows
     PLOT_COLS = args.plot_cols
     NPZ_OUTPUT = args.npz_output
@@ -145,7 +146,8 @@ def main(args):
 
         figures = plot_protonation_fraction(
             xvg_data_list, lambda_ref, chain_mapping=mapping,
-            npz_output=NPZ_OUTPUT,  single_letter=SINGLE_LETTER)
+            npz_output=NPZ_OUTPUT,  single_letter=SINGLE_LETTER,
+            show_replicas=SHOW_REPLICAS)
         for i, fig in enumerate(figures):
             suffix = f"_{i+1}" if len(figures) > 1 else ""
             fig.savefig(os.path.join(OUTPUT_DIR_PLOT,
@@ -202,6 +204,11 @@ if __name__ == "__main__":
     parser.set_defaults(single_letter=True)
 
     # --- Output options ---
+    parser.add_argument('--no-replica-dots', dest='show_replicas',
+                        action='store_false',
+                        help="Hide the per-replica dots on the protonation fraction bars")
+    parser.set_defaults(show_replicas=True)
+
     parser.add_argument('--npz-output', action='store_true', default=False,
                         help="Save protonation data as .npz files")
 
