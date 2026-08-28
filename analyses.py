@@ -1,3 +1,24 @@
+"""
+constant-ph-utils: analysis and plotting for GROMACS constant-pH MD simulations.
+
+Copyright (C) 2026  Andrea Pasquadibisceglie
+Contact: https://orcid.org/0000-0002-1630-6982
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
+__version__ = "0.1.0"
+
 from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
