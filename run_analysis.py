@@ -6,16 +6,12 @@ import cProfile
 import pstats
 import argparse
 import pandas as pd
-import sys
 import os
-# caution: path[0] is reserved for script path (or '' in REPL)
-sys.path.insert(1, 'constant-ph-utils/')
 
 try:
     import argcomplete
 except ImportError:          # optional: only needed for shell tab-completion
     argcomplete = None
-###### Main function #######
 
 
 def main(args):
