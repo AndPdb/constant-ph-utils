@@ -249,10 +249,6 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
                                 (total_protmean - total_protonse)[::stride],
                                 (total_protmean + total_protonse)[::stride],
                                 alpha=0.5)
-                
-                ax.plot(np.mean(total_protarray, axis=0))
-                ax.fill_between(np.arange(len(total_protarray[0, :])), np.mean(
-                    total_protarray, axis=0) - total_protonse, np.mean(total_protarray, axis=0) + total_protonse, alpha=0.5)
 
                 # Set xticks and labels aaccording to the simulation time
 
