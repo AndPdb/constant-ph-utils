@@ -32,6 +32,7 @@ class XVGData:
     coordids: List[int] = field(default_factory=list)
     num_rows: int = field(default_factory=2000000)
     num_threads: int = field(default_factory=2)
+    verbose: bool = False
     data: Dict[int, np.ndarray] = field(default_factory=dict)
 
     def __post_init__(self):
@@ -49,7 +50,8 @@ class XVGData:
                 coord_xvg_name = f"cphmd-coord-{coord_id}.xvg"
                 coord_xvg_path = os.path.join(
                     self.analysis_dir, coord_xvg_name)
-                print(coord_xvg_path)
+                if self.verbose:
+                    print(coord_xvg_path, flush=True)
 
                 if os.path.exists(coord_xvg_path):
                     future = executor.submit(

@@ -30,6 +30,8 @@ def main(args):
     LAMBDAREF_PATH = args.lambdaref_path
     PATHS_MD = args.paths_md
 
+    VERBOSE = (RUN_TYPE == "Debug")
+
     # Derive convergence prefix from MD paths
     CONVERG_PREFIX = "-".join([x.rstrip("/").split("/")[-2] for x in PATHS_MD])
     # Load lambda reference data
@@ -67,6 +69,8 @@ def main(args):
         mapping = {}
 
     # Load XVGdata for each path and chain
+    print("Loading XVG data", flush=True)
+
     for path in PATHS_MD:
         if not os.path.exists(path):
             raise FileNotFoundError(
@@ -75,10 +79,10 @@ def main(args):
         if CHAINS is not None:
             for chain in CHAINS:
                 xvg_data_list.append(XVGData(path, coordids=coordids_chain[str(
-                    chain)], num_rows=XVG_ROWS, num_threads=THREADS))
+                    chain)], num_rows=XVG_ROWS, num_threads=THREADS, verbose=VERBOSE))
         else:
             xvg_data_list.append(
-                XVGData(path, coordids=coordids, num_rows=XVG_ROWS, num_threads=THREADS))
+                XVGData(path, coordids=coordids, num_rows=XVG_ROWS, num_threads=THREADS, verbose=VERBOSE))
 
     # Get last time of MD1 for plotting time series
     time_MD1 = xvg_data_list[0][1][-1, 0]
@@ -96,6 +100,8 @@ def main(args):
         min_time = min(time_MDs)
 
     # Overview lambda distributions
+    print("Plotting lambda distributions", flush=True)
+
     i = 0
     for path in PATHS_MD:
         title = path.rstrip("/").split("/")[-2]
@@ -116,6 +122,8 @@ def main(args):
             i += 1
 
     # Protonation fraction time series
+    print("Plotting protonation time series", flush=True)
+    
     i = 0
     for path in PATHS_MD:
         title = path.rstrip("/").split("/")[-2]
@@ -138,6 +146,7 @@ def main(args):
     if RUN_TYPE == "Publication":     # In case we have replicas
 
         # ## Protonation convergence
+        print("Plotting protonation convergence", flush=True)
         proton_conv = plot_protonation_convergence(
             PATHS_MD, min_time, xvg_data_list, coord2lambda_dict, lambda_ref, chain_mapping=mapping, rows=PLOT_ROWS, quality=PLOT_TYPE,  single_letter=SINGLE_LETTER)
         proton_conv.savefig(os.path.join(
@@ -155,6 +164,7 @@ def main(args):
             plt.close(fig)
 
         # ## Sigle residue protonation fraction time series
+        print("Plotting single-residue protonation fractions", flush=True)
         if RES_IDS:
             for res_id in RES_IDS:
                 res_coord = resid2coordid(res_id, lambda_ref)
@@ -163,6 +173,8 @@ def main(args):
                 res_conv.savefig(os.path.join(
                     OUTPUT_DIR_PLOT, f"Res_{res_id}.png"), dpi=300)
                 res_conv.close()
+
+    print("Done", flush=True)
 
 
 if __name__ == "__main__":
