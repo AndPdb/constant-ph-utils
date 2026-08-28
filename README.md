@@ -3,6 +3,8 @@
 Analysis and plotting toolkit for **GROMACS constant-pH molecular dynamics** simulations.  
 Reads λ-coordinate XVG files, computes protonation statistics across replicas, and generates publication-ready figures.
 
+Copyright © 2026 Andrea Pasquadibisceglie. Released under GPL-3.0-or-later.
+
 ---
 
 ## Table of Contents
@@ -223,6 +225,7 @@ usage: run_analysis.py [-h]
 | `--xvg-rows` | `2000000` | Max rows to read per XVG file |
 | `--chains` | `None` | Chain identifiers for homomeric systems (e.g. `A B`) |
 | `--profile` | `False` | Enable cProfile profiling |
+| `--version` | `False` | Print version number |
 
 ### Examples
 
@@ -334,7 +337,7 @@ Where `{prefix}` is automatically derived by joining the parent directory names 
 | `plot_lambda_hist(...)` | `plt` | Grid of λ-value histograms, one subplot per coordinate. |
 | `plot_protonation_timeseries(...)` | `plt` | Grid of cumulative protonation fraction time series. |
 | `plot_protonation_convergence(...)` | `plt` | Grid of mean ± SE convergence curves across replicas. |
-| `plot_protonation_fraction(...)` | `list[fig]` | Publication-ready bar charts with one axis per residue type, showing mean ± SE bars plus one dot per replica. Uses `GridSpec` bin-packing so that all bars have equal physical width and small groups share a row; splits across multiple figures when there are more panels than fit. To fit all panels in one figure increase `max_fig_height` |
+| `plot_protonation_fraction(...)` | `list[fig]` | Publication-ready bar charts with one axis per residue type, showing mean ± SE bars plus one dot per replica. Uses `GridSpec` bin-packing so that all bars have equal physical width and small groups share a row; splits across multiple figures when there are more panels than fit. To fit all panels in one figure increase the `max_fig_height` constant. |
 | `single_residue_convergence(...)` | `plt` | Single-panel convergence plot for a specific (non-histidine) residue. |
 
 **Helper functions:**

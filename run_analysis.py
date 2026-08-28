@@ -8,6 +8,7 @@ Licensed under GPL-3.0; see LICENSE for the full text.
 
 from plot import *
 from analyses import *
+from analyses import __version__ 
 import cProfile
 import pstats
 import argparse
@@ -247,6 +248,10 @@ if __name__ == "__main__":
     # --- Profiling ---
     parser.add_argument('--profile', action='store_true',
                         help="Enable profiling with cProfile")
+
+    # --- Version ---
+    parser.add_argument('--version', action='version',
+                        version=f"constant-ph-utils {__version__}")
 
     if argcomplete is not None:
         argcomplete.autocomplete(parser)
