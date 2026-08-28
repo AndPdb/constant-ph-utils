@@ -1,4 +1,5 @@
 # constant-ph-utils
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22145295.svg)](https://doi.org/10.5281/zenodo.22145295)
 
 Analysis and plotting toolkit for **GROMACS constant-pH molecular dynamics** simulations.  
 Reads λ-coordinate XVG files, computes protonation statistics across replicas, and generates publication-ready figures.
