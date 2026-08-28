@@ -48,12 +48,16 @@ All plots support both a `Debug` mode (coordinate IDs in titles) and a `Publicat
 
 ```
 constant-ph-utils/
-├── plot/                        # Test plotting
+├── plots/                       # Test plotting
 ├── test/                        # Test input file
 ├── analyses.py                  # Data loading, statistics, time series
+├── CITATION.cff
+├── environment.yml              # Conda environment
+├── LICENSE
 ├── plot.py                      # All plotting functions
-├── run_analysis.py              # CLI entry point
-└── README.md
+├── README.md
+├── requirements.txt             # pip installation file
+└── run_analysis.py              # CLI entry point
 ```
 
 ---
@@ -225,7 +229,7 @@ usage: run_analysis.py [-h]
 | `--xvg-rows` | `2000000` | Max rows to read per XVG file |
 | `--chains` | `None` | Chain identifiers for homomeric systems (e.g. `A B`) |
 | `--profile` | `False` | Enable cProfile profiling |
-| `--version` | `False` | Print version number |
+| `--version` | | Print version number |
 
 ### Examples
 

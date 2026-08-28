@@ -2,7 +2,7 @@
 Plotting functions for constant-ph-utils.
 
 Copyright (C) 2026  Andrea Pasquadibisceglie
-Licensed under GPL-3.0; see LICENSE for the full text.
+Licensed under GPL-3.0-or-later; see LICENSE for the full text.
 """
 
 import matplotlib.pyplot as plt
