@@ -123,7 +123,7 @@ def main(args):
 
     # Protonation fraction time series
     print("Plotting protonation time series", flush=True)
-    
+
     i = 0
     for path in PATHS_MD:
         title = path.rstrip("/").split("/")[-2]
@@ -153,6 +153,8 @@ def main(args):
             OUTPUT_DIR_PLOT, f"{CONVERG_PREFIX}_convergence.png"), dpi=300)
         proton_conv.close('all')
 
+        # ## Protonation fraction
+        print("Plotting protonation fractions", flush=True)
         figures = plot_protonation_fraction(
             xvg_data_list, lambda_ref, chain_mapping=mapping,
             npz_output=NPZ_OUTPUT,  single_letter=SINGLE_LETTER,
@@ -164,8 +166,9 @@ def main(args):
             plt.close(fig)
 
         # ## Sigle residue protonation fraction time series
-        print("Plotting single-residue protonation fractions", flush=True)
         if RES_IDS:
+            print("Plotting single-residue protonation fractions", flush=True)
+
             for res_id in RES_IDS:
                 res_coord = resid2coordid(res_id, lambda_ref)
                 res_conv = single_residue_convergence(
