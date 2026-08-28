@@ -5,13 +5,12 @@ from analyses import *
 import cProfile
 import pstats
 import argparse
-import pandas as pd
-import os
-
 try:
     import argcomplete
 except ImportError:          # optional: only needed for shell tab-completion
     argcomplete = None
+import pandas as pd
+import os
 
 
 def main(args):
