@@ -207,7 +207,7 @@ if __name__ == "__main__":
     parser.add_argument('--no-replica-dots', dest='show_replicas',
                         action='store_false',
                         help="Hide the per-replica dots on the protonation "
-                             "fraction bars (shown by default)")
+                             "fraction bars")
     parser.set_defaults(show_replicas=True)
 
     parser.add_argument('--npz-output', action='store_true', default=False,
