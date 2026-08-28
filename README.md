@@ -198,6 +198,7 @@ usage: run_analysis.py [-h]
     [--plot-rows PLOT_ROWS]
     [--plot-cols PLOT_COLS]
     [--no-single-letter]
+    [--no-replica-dots]
     [--npz-output]
     [--threads THREADS]
     [--xvg-rows XVG_ROWS]
@@ -216,6 +217,7 @@ usage: run_analysis.py [-h]
 | `--plot-rows` | `21` | Rows in the overview plot grids |
 | `--plot-cols` | `5` | Columns in the overview plot grids |
 | `--no-single-letter` | *(off)* | Use three-letter amino acid codes (default is one-letter) |
+| `--no-replica-dots` | *(off)* | Hide the per-replica dots on the protonation fraction bars |
 | `--npz-output` | `False` | Save protonation data as `.npz` files |
 | `--threads` | `8` | Parallel worker processes for XVG loading |
 | `--xvg-rows` | `2000000` | Max rows to read per XVG file |
