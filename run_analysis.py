@@ -107,14 +107,14 @@ def main(args):
                     xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS, single_letter=SINGLE_LETTER)
                 lambda_hist.savefig(os.path.join(
                     OUTPUT_DIR_PLOT, f"{title}_{chain}_histograms.png"))
-                lambda_hist.close()
+                lambda_hist.close('all')
                 i += 1
         else:
             lambda_hist = plot_lambda_hist(
                 xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS,  single_letter=SINGLE_LETTER)
             lambda_hist.savefig(os.path.join(
                 OUTPUT_DIR_PLOT, f"{title}_histograms.png"))
-            lambda_hist.close()
+            lambda_hist.close('all')
             i += 1
 
     # Protonation fraction time series
@@ -127,14 +127,14 @@ def main(args):
                     time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
                 proton_ts.savefig(os.path.join(
                     OUTPUT_DIR_PLOT, f"{title}_{chain}_timeseries.png"))
-                proton_ts.close()
+                proton_ts.close('all')
                 i += 1
         else:
             proton_ts = plot_protonation_timeseries(
                 time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
             proton_ts.savefig(os.path.join(
                 OUTPUT_DIR_PLOT, f"{title}_timeseries.png"))
-            proton_ts.close()
+            proton_ts.close('all')
             i += 1
 
     if RUN_TYPE == "Publication":     # In case we have replicas
@@ -144,7 +144,7 @@ def main(args):
             PATHS_MD, min_time, xvg_data_list, coord2lambda_dict, lambda_ref, chain_mapping=mapping, rows=PLOT_ROWS, quality=PLOT_TYPE,  single_letter=SINGLE_LETTER)
         proton_conv.savefig(os.path.join(
             OUTPUT_DIR_PLOT, f"{CONVERG_PREFIX}_convergence.png"), dpi=300)
-        proton_conv.close()
+        proton_conv.close('all')
 
         figures = plot_protonation_fraction(
             xvg_data_list, lambda_ref, chain_mapping=mapping,
