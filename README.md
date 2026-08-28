@@ -74,20 +74,40 @@ to your actual frame count and lower `--threads` if you hit an OOM kill.
 
 ## Installation
 
-No installation step is required. Clone or copy the three Python files into a directory and run directly:
+Clone the repo
 
 ```bash
 git clone <repo-url> constant-ph-utils
-cd constant-ph-utils
 ```
 
-Install the Python dependencies if not already available:
+Install the minimal requirements with pip
+```bash
+pip install -r requirements.txt
+```
+or create a conda environment
+```bash
+conda env create -f environment.yml 
+```
+
+Run it from the repo folder or from the workspace:
 
 ```bash
-pip install numpy pandas matplotlib argcomplete
-```
+# from inside the repo
+python run_analysis.py \
+  --lambdaref-path test/ \
+  --paths-md test/MD1/analysis test/MD2/analysis \
+  --dir-plot plots/
 
-### Shell Completion
+# from anywhere, calling the script by its path
+cd ~/my/md/project
+python /path/to/constant-ph-utils/run_analysis.py \
+  --lambdaref-path . \
+  --paths-md MD1/analysis MD2/analysis \
+  --dir-plot plots/
+```
+---
+
+### Shell Completion (it needs the argcomplete library)
 
 To enable tab-completion of all `--flags` in your terminal, run the appropriate activation for your shell:
 
@@ -97,21 +117,13 @@ To enable tab-completion of all `--flags` in your terminal, run the appropriate 
 eval "$(register-python-argcomplete run_analysis.py)"
 ```
 
-**Zsh** (add to `~/.zshrc`):
-
-```bash
-autoload -U bashcompinit
-bashcompinit
-eval "$(register-python-argcomplete run_analysis.py)"
-```
-
 **Global activation** (enables completion for all argcomplete-enabled scripts):
 
 ```bash
 activate-global-python-argcomplete
 ```
 
-After sourcing your shell config (`source ~/.bashrc` or `source ~/.zshrc`), you can type:
+After sourcing your shell config (`source ~/.bashrc`), you can type:
 
 ```bash
 python run_analysis.py --<TAB><TAB>
