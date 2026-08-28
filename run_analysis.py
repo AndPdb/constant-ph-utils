@@ -1,5 +1,7 @@
 # PYTHON_ARGCOMPLETE_OK
 
+from plot import *
+from analyses import *
 import cProfile
 import pstats
 import argcomplete
@@ -9,8 +11,6 @@ import sys
 import os
 # caution: path[0] is reserved for script path (or '' in REPL)
 sys.path.insert(1, 'constant-ph-utils/')
-from analyses import *
-from plot import *
 
 
 ###### Main function #######
@@ -152,7 +152,7 @@ def main(args):
         for i, fig in enumerate(figures):
             suffix = f"_{i+1}" if len(figures) > 1 else ""
             fig.savefig(os.path.join(OUTPUT_DIR_PLOT,
-                f"{CONVERG_PREFIX}_protonfraction{suffix}.png"), bbox_inches='tight', dpi=300)
+                                     f"{CONVERG_PREFIX}_protonfraction{suffix}.png"), bbox_inches='tight', dpi=300)
             plt.close(fig)
 
         # ## Sigle residue protonation fraction time series

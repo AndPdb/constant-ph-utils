@@ -111,6 +111,7 @@ def calculate_fractions(array_xvg: np.ndarray) -> Tuple[float, float]:
     deprot_frac = deprot.sum() / total
     return prot_frac, deprot_frac
 
+
 def get_replica_fractions(coord_id: int, xvg_data_list: List[XVGData], chain_mapping={}) -> Tuple[List[float], List[float]]:
     """
     Per-replica protonation/deprotonation fractions for a single coordinate.
@@ -192,6 +193,7 @@ def calculate_histidine_fractions(array_xvgs: List[np.ndarray]) -> float:
 
     return prot_frac
 
+
 def get_histidine_replica_fractions(coord_ids: List[int], xvg_data_list: List[XVGData], chain_mapping={}) -> List[float]:
     """Per-replica protonation fraction for a histidine (3-coordinate group)."""
     prot_fractions = []
@@ -204,7 +206,7 @@ def get_histidine_replica_fractions(coord_ids: List[int], xvg_data_list: List[XV
         except KeyError:
             # If any coordinate is missing, skip this replica
             histidine_data = [xvg_data[chain_mapping[coord_id]]
-                            for coord_id in coord_ids]
+                              for coord_id in coord_ids]
         # Calculate the protonation fraction for this replica
         prot_fractions.append(calculate_histidine_fractions(histidine_data))
 

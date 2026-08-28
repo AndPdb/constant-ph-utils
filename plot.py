@@ -148,7 +148,7 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
 
                 stride = max(1, len(res_prot_ts) // plot_points)
                 ax.plot(np.arange(0, len(res_prot_ts), stride),
-                       res_prot_ts[::stride], label="MD1")
+                        res_prot_ts[::stride], label="MD1")
                 ax.set_ylim(-0.1, 1.1)
 
                 # Set xticks and labels aaccording to the simulation time
@@ -352,7 +352,8 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
 
     max_slots = max(len(g[1]) for g in groups_list)
 
-    layout_rows = []   # each element: list of (resname, labels, avgs, ses, reps)
+    # each element: list of (resname, labels, avgs, ses, reps)
+    layout_rows = []
     current_row = []
     current_slots = 0
     for g in groups_list:
@@ -392,7 +393,7 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
             merged_blocks[-1][1] = max(merged_blocks[-1][1], end)
         else:
             merged_blocks.append([start, end])
- 
+
     # 3. Pack merged blocks into figures, never splitting a block
     figure_pages = []
     current_page = []
@@ -419,7 +420,7 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
     dot_spread = 0.12
     y_top = 1.15
     label_pad = 5
-    
+
     for fig_rows in figure_pages:
         n_fig_rows = len(fig_rows)
 
@@ -442,8 +443,8 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
                 n = len(avgs)
                 x = np.arange(n)
                 bars = ax.bar(x, avgs, yerr=ses, capsize=3, width=bar_width,
-                            color=bar_color, edgecolor=bar_color,
-                            error_kw=dict(lw=0.8, capthick=0.8))
+                              color=bar_color, edgecolor=bar_color,
+                              error_kw=dict(lw=0.8, capthick=0.8))
 
                 # Per-replica averages as a dot plot on top of each bar
                 dot_top = np.full(n, -np.inf)
@@ -471,9 +472,9 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
                 clash = (dot_top - cap) * pts_per_unit + r_pts > label_pad
 
                 ax.bar_label(bars,
-                            labels=["" if c else f"{a:.2f}"
-                                    for a, c in zip(avgs, clash)],
-                            padding=label_pad, fontsize=6)
+                             labels=["" if c else f"{a:.2f}"
+                                     for a, c in zip(avgs, clash)],
+                             padding=label_pad, fontsize=6)
                 for xi, a, t, c in zip(x, avgs, dot_top, clash):
                     if c:
                         ax.annotate(f"{a:.2f}", (xi, t),
@@ -484,7 +485,8 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
                 display_name = _display_resname(resname, single_letter)
                 res_labels = [f"{display_name}{lid}" for lid in labels]
                 ax.set_xticks(x)
-                ax.set_xticklabels(res_labels, fontsize=8, rotation=45, ha='right')
+                ax.set_xticklabels(res_labels, fontsize=8,
+                                   rotation=45, ha='right')
                 ax.set_xlim(-1.0, n)
                 ax.set_ylim(0.0, y_top)
                 ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
@@ -503,11 +505,10 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
     return figures
 
 
-def single_residue_convergence(coordid, xvg_data_list: List[XVGData],time, lambda_ref, chain_mapping={}, single_letter=True):
+def single_residue_convergence(coordid, xvg_data_list: List[XVGData], time, lambda_ref, chain_mapping={}, single_letter=True):
     """THIS WORKS ONLY FOR NON HISTIDINES! Plot convergence of single residue."""
 
     res_fractions = []
-
 
     display_name = _display_resname(
         lambda_ref.iloc[coordid-1]["resname"], single_letter)
@@ -533,7 +534,7 @@ def single_residue_convergence(coordid, xvg_data_list: List[XVGData],time, lambd
     xticks = np.arange(0, length, length/3)
     xticks = np.round(xticks/10000)*10000
     xticks = np.concatenate((xticks, [length]))
- 
+
     plt.xticks(xticks.astype(int), (xticks/1000).astype(int))
     plt.ylim(0, 1.1)
     plt.ylabel("Protonation fraction")
