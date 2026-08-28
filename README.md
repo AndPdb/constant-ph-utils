@@ -334,7 +334,7 @@ Where `{prefix}` is automatically derived by joining the parent directory names 
 | `plot_lambda_hist(...)` | `plt` | Grid of λ-value histograms, one subplot per coordinate. |
 | `plot_protonation_timeseries(...)` | `plt` | Grid of cumulative protonation fraction time series. |
 | `plot_protonation_convergence(...)` | `plt` | Grid of mean ± SE convergence curves across replicas. |
-| `plot_protonation_fraction(...)` | `list[fig]` | Publication-ready bar charts with one axis per residue type, showing mean ± SE bars plus one dot per replica. Uses `GridSpec` bin-packing so that all bars have equal physical width and small groups share a row; splits across multiple figures when there are more panels than fit. |
+| `plot_protonation_fraction(...)` | `list[fig]` | Publication-ready bar charts with one axis per residue type, showing mean ± SE bars plus one dot per replica. Uses `GridSpec` bin-packing so that all bars have equal physical width and small groups share a row; splits across multiple figures when there are more panels than fit. To fit all panels in one figure increase `max_fig_height` |
 | `single_residue_convergence(...)` | `plt` | Single-panel convergence plot for a specific (non-histidine) residue. |
 
 **Helper functions:**

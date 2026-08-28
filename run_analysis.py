@@ -167,7 +167,7 @@ def main(args):
 
         # ## Sigle residue protonation fraction time series
         if RES_IDS:
-            print("Plotting single-residue protonation fractions", flush=True)
+            print("Plotting single-residue convergence", flush=True)
 
             for res_id in RES_IDS:
                 res_coord = resid2coordid(res_id, lambda_ref)
