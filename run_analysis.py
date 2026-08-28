@@ -4,7 +4,6 @@ from plot import *
 from analyses import *
 import cProfile
 import pstats
-import argcomplete
 import argparse
 import pandas as pd
 import sys
@@ -12,7 +11,10 @@ import os
 # caution: path[0] is reserved for script path (or '' in REPL)
 sys.path.insert(1, 'constant-ph-utils/')
 
-
+try:
+    import argcomplete
+except ImportError:          # optional: only needed for shell tab-completion
+    argcomplete = None
 ###### Main function #######
 
 
@@ -222,7 +224,9 @@ if __name__ == "__main__":
     parser.add_argument('--profile', action='store_true',
                         help="Enable profiling with cProfile")
 
-    argcomplete.autocomplete(parser)
+    if argcomplete is not None:
+        argcomplete.autocomplete(parser)
+
     args = parser.parse_args()
 
     if args.profile:
