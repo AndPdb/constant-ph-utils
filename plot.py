@@ -47,7 +47,23 @@ def _group_coordids_by_resname(coordids, lambda_ref):
     return groups
 
 
-def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug', single_letter=False):
+def _write_fraction_csv(group_data, path):
+    """One row per residue: mean, SE, and each replica's value."""
+    n_rep = max((len(r) for _, _, _, reps in group_data.values()
+                 for r in reps), default=0)
+    rows = []
+    for resname, (labels, avgs, ses, reps) in group_data.items():
+        for resid, avg, se, rep in zip(labels, avgs, ses, reps):
+            row = {"resname": resname, "resid": int(resid),
+                   "prot_avg": avg, "prot_se": se}
+            for k in range(n_rep):
+                row[f"replica_{k+1}"] = rep[k] if k < len(rep) else np.nan
+            rows.append(row)
+    pd.DataFrame(rows).to_csv(path, index=False)
+
+
+def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5,
+                     quality='Debug', single_letter=False):
     """Plot histogram of lambda values"""
     # Set up the grid size
     # Create a figure with subplots
@@ -98,7 +114,8 @@ def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, q
     return plt
 
 
-def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5, quality='Debug', npz_output=False, single_letter=False):
+def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, rows=20,
+                                cols=5, quality='Debug', npz_output=False, single_letter=False):
     """"Plot protonation time-series"""
     # Set up the grid size
     # Create a figure with subplots
@@ -151,7 +168,8 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
                     resname = lambda_ref.iloc[index]['resname']
                     resid = lambda_ref.iloc[index]['resid']
                     np.savez(
-                        f"{xvg_data.analysis_dir}/{resname}_{resid}_protonation_timeseries.npz", res_prot_ts=res_prot_ts)
+                        f"{xvg_data.analysis_dir}/{resname}_{resid}_protonation_timeseries.npz",
+                          res_prot_ts=res_prot_ts)
 
                 stride = max(1, len(res_prot_ts) // plot_points)
                 ax.plot(np.arange(0, len(res_prot_ts), stride),
@@ -185,7 +203,10 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
     return plt
 
 
-def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGData], coord2lambda_dict, lambda_ref, chain_mapping={}, rows=20, cols=5, quality='Debug', single_letter=False):
+def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGData],
+                                 coord2lambda_dict, lambda_ref, chain_mapping={},
+                                 rows=20, cols=5, quality='Debug', single_letter=False,
+                                 csv_output=None):
     """Plot protonation avg and standard error time-series."""
     # Set up the grid size
     # Create a figure with subplots
@@ -195,6 +216,7 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
     coordid = 1
     prv_resid = 0
     plot_points = 2000
+    csv_frames = []
 
     # Generate and plot data for each subplot
     if quality == 'Debug':
@@ -251,13 +273,22 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
                 # frame units, so the tick positions below remain valid.
                 stride = max(1, min_length // plot_points)
                 xs = np.arange(0, min_length, stride)
+
+                if csv_output:
+                    csv_frames.append(pd.DataFrame({
+                        "resname": lambda_ref.iloc[index]['resname'],
+                        "resid": lambda_ref.iloc[index]['resid'],
+                        "frame": xs,
+                        "prot_mean": total_protmean[::stride],
+                        "prot_se": total_protonse[::stride]}))
+                    
                 ax.plot(xs, total_protmean[::stride])
                 ax.fill_between(xs,
                                 (total_protmean - total_protonse)[::stride],
                                 (total_protmean + total_protonse)[::stride],
                                 alpha=0.5)
 
-                # Set xticks and labels aaccording to the simulation time
+                # Set xticks and labels according to the simulation time
 
                 ax.set_xticks(xticks.astype(int))
                 ax.set_xticklabels((xticks/1000).astype(int))
@@ -281,12 +312,18 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
     for ax in axes.flat[coordid-1:]:
         ax.remove()
 
+    if csv_output and csv_frames:
+        os.makedirs(csv_output, exist_ok=True)
+        pd.concat(csv_frames, ignore_index=True).to_csv(
+            os.path.join(csv_output, "protonation_convergence.csv"),
+            index=False)
+
     return plt
 
 
 def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
                               chain_mapping={}, npz_output=False, single_letter=False,
-                              max_bars_per_subplot=25, show_replicas=True):
+                              max_bars_per_subplot=25, show_replicas=True, csv_output=None):
     """Plot protonation fractions, one figure per residue type.
     All residues of the same type are shown as bars on a single axis.
     """
@@ -341,6 +378,11 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
                          res_prot_avg=proton_avg, res_prot_se=proton_se)
 
         group_data[resname] = (labels, avgs, ses, reps)
+
+        if csv_output:
+            os.makedirs(csv_output, exist_ok=True)
+            _write_fraction_csv(group_data, os.path.join(
+                                csv_output, "protonation_fractions.csv"))
 
     # --- Layout: bin-pack groups into rows so small groups share a line ---
     # Split large groups into chunks so no subplot has more than max_bars_per_subplot bars
@@ -512,7 +554,8 @@ def plot_protonation_fraction(xvg_data_list: List[XVGData], lambda_ref,
     return figures
 
 
-def single_residue_convergence(coordid, xvg_data_list: List[XVGData], time, lambda_ref, chain_mapping={}, single_letter=True):
+def single_residue_convergence(coordid, xvg_data_list: List[XVGData], time, lambda_ref,
+                               chain_mapping={}, single_letter=True):
     """THIS WORKS ONLY FOR NON HISTIDINES! Plot convergence of single residue."""
 
     res_fractions = []

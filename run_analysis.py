@@ -31,6 +31,7 @@ def main(args):
     PLOT_ROWS = args.plot_rows
     PLOT_COLS = args.plot_cols
     NPZ_OUTPUT = args.npz_output
+    CSV_OUTPUT = args.csv_output
     THREADS = args.threads
     XVG_ROWS = args.xvg_rows
     CHAINS = args.chains
@@ -89,7 +90,8 @@ def main(args):
                     chain)], num_rows=XVG_ROWS, num_threads=THREADS, verbose=VERBOSE))
         else:
             xvg_data_list.append(
-                XVGData(path, coordids=coordids, num_rows=XVG_ROWS, num_threads=THREADS, verbose=VERBOSE))
+                XVGData(path, coordids=coordids, num_rows=XVG_ROWS, num_threads=THREADS,
+                        verbose=VERBOSE))
 
     # Get last time of MD1 for plotting time series
     time_MD1 = xvg_data_list[0][1][-1, 0]
@@ -115,14 +117,16 @@ def main(args):
         if CHAINS is not None:
             for chain in lambda_ref_chains.groups.keys():
                 lambda_hist = plot_lambda_hist(
-                    xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS, single_letter=SINGLE_LETTER)
+                    xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS,
+                    cols=PLOT_COLS, single_letter=SINGLE_LETTER)
                 lambda_hist.savefig(os.path.join(
                     OUTPUT_DIR_PLOT, f"{title}_{chain}_histograms.png"))
                 lambda_hist.close()
                 i += 1
         else:
             lambda_hist = plot_lambda_hist(
-                xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, cols=PLOT_COLS,  single_letter=SINGLE_LETTER)
+                xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS,
+                cols=PLOT_COLS,  single_letter=SINGLE_LETTER)
             lambda_hist.savefig(os.path.join(
                 OUTPUT_DIR_PLOT, f"{title}_histograms.png"))
             lambda_hist.close()
@@ -137,14 +141,16 @@ def main(args):
         if CHAINS is not None:
             for chain in CHAINS:
                 proton_ts = plot_protonation_timeseries(
-                    time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
+                    time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref,
+                    rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
                 proton_ts.savefig(os.path.join(
                     OUTPUT_DIR_PLOT, f"{title}_{chain}_timeseries.png"))
                 proton_ts.close()
                 i += 1
         else:
             proton_ts = plot_protonation_timeseries(
-                time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref, rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
+                time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref,
+                rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
             proton_ts.savefig(os.path.join(
                 OUTPUT_DIR_PLOT, f"{title}_timeseries.png"))
             proton_ts.close()
@@ -154,18 +160,22 @@ def main(args):
 
         # ## Protonation convergence
         print("Plotting protonation convergence", flush=True)
+
         proton_conv = plot_protonation_convergence(
-            PATHS_MD, min_time, xvg_data_list, coord2lambda_dict, lambda_ref, chain_mapping=mapping, rows=PLOT_ROWS, quality=PLOT_TYPE,  single_letter=SINGLE_LETTER)
+            PATHS_MD, min_time, xvg_data_list, coord2lambda_dict, lambda_ref,
+            chain_mapping=mapping, rows=PLOT_ROWS, quality=PLOT_TYPE,
+            single_letter=SINGLE_LETTER, csv_output=CSV_OUTPUT)
         proton_conv.savefig(os.path.join(
             OUTPUT_DIR_PLOT, f"{CONVERG_PREFIX}_convergence.png"), dpi=300)
         proton_conv.close('all')
 
         # ## Protonation fraction
         print("Plotting protonation fractions", flush=True)
+
         figures = plot_protonation_fraction(
             xvg_data_list, lambda_ref, chain_mapping=mapping,
             npz_output=NPZ_OUTPUT,  single_letter=SINGLE_LETTER,
-            show_replicas=SHOW_REPLICAS)
+            show_replicas=SHOW_REPLICAS, csv_output=CSV_OUTPUT)
         for i, fig in enumerate(figures):
             suffix = f"_{i+1}" if len(figures) > 1 else ""
             fig.savefig(os.path.join(OUTPUT_DIR_PLOT,
@@ -234,6 +244,9 @@ if __name__ == "__main__":
 
     parser.add_argument('--npz-output', action='store_true', default=False,
                         help="Save protonation data as .npz files")
+    parser.add_argument('--csv-output', type=str, default=None,
+                        help="Directory for CSV export of bar-chart means and "
+                             "convergence curves (omit to skip)")
 
     # --- Performance ---
     parser.add_argument('--threads', type=int, default=8,
