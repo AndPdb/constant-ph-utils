@@ -142,7 +142,8 @@ def main(args):
             for chain in CHAINS:
                 proton_ts = plot_protonation_timeseries(
                     time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref,
-                    rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
+                    rows=PLOT_ROWS, single_letter=SINGLE_LETTER,
+                    csv_output=CSV_OUTPUT, csv_label=f"{title}_{chain}")
                 proton_ts.savefig(os.path.join(
                     OUTPUT_DIR_PLOT, f"{title}_{chain}_timeseries.png"))
                 proton_ts.close()
@@ -150,7 +151,8 @@ def main(args):
         else:
             proton_ts = plot_protonation_timeseries(
                 time_MD1, xvg_data_list[i], coord2lambda_dict, lambda_ref,
-                rows=PLOT_ROWS, single_letter=SINGLE_LETTER)
+                rows=PLOT_ROWS, single_letter=SINGLE_LETTER,
+                csv_output=CSV_OUTPUT)
             proton_ts.savefig(os.path.join(
                 OUTPUT_DIR_PLOT, f"{title}_timeseries.png"))
             proton_ts.close()

@@ -115,7 +115,8 @@ def plot_lambda_hist(xvg_data, coord2lambda_dict, lambda_ref, rows=20, cols=5,
 
 
 def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, rows=20,
-                                cols=5, quality='Debug', npz_output=False, single_letter=False):
+                                cols=5, quality='Debug', npz_output=False, single_letter=False,
+                                csv_output=None, csv_label=None):
     """"Plot protonation time-series"""
     # Set up the grid size
     # Create a figure with subplots
@@ -126,6 +127,7 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
     index_coordid = copy.deepcopy(xvg_data.coordids[0])
     prv_resid = 0
     plot_points = 2000
+    csv_frames = []
 
     # Generate and plot data for each subplot
     if quality == 'Debug':
@@ -172,8 +174,16 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
                           res_prot_ts=res_prot_ts)
 
                 stride = max(1, len(res_prot_ts) // plot_points)
-                ax.plot(np.arange(0, len(res_prot_ts), stride),
-                        res_prot_ts[::stride], label="MD1")
+                xs = np.arange(0, len(res_prot_ts), stride)
+
+                if csv_output:
+                    csv_frames.append(pd.DataFrame({
+                        "resname": lambda_ref.iloc[index]['resname'],
+                        "resid": lambda_ref.iloc[index]['resid'],
+                        "frame": xs,
+                        "prot_fraction": res_prot_ts[::stride]}))
+
+                ax.plot(xs, res_prot_ts[::stride], label="MD1")
                 ax.set_ylim(-0.1, 1.1)
 
                 # Set xticks and labels aaccording to the simulation time
@@ -199,6 +209,15 @@ def plot_protonation_timeseries(time, xvg_data, coord2lambda_dict, lambda_ref, r
 
     for ax in axes.flat[coordid-1:]:
         ax.remove()
+
+    if csv_output and csv_frames:
+        os.makedirs(csv_output, exist_ok=True)
+        if csv_label is None:
+            parts = xvg_data.analysis_dir.rstrip("/").split("/")
+            csv_label = parts[-2] if len(parts) > 1 else (parts[-1] or "MD")
+        pd.concat(csv_frames, ignore_index=True).to_csv(
+            os.path.join(csv_output, f"{csv_label}_protonation_timeseries.csv"),
+            index=False)
 
     return plt
 
