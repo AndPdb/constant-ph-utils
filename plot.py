@@ -279,7 +279,8 @@ def plot_protonation_convergence(PATH_ANALYSIS, time, xvg_data_list: List[XVGDat
                     for xvg_data in xvg_data_list:
                         list_residues.append(get_protonation_timeseries(
                             coordid, xvg_data, chain_mapping))
-
+                # Drop chains/replicas with no data for this coordinate
+                list_residues = [r for r in list_residues if len(r) > 0]
                 min_length = min(map(len, list_residues))
                 total_protarray = np.vstack(
                     [res_array[:min_length] for res_array in list_residues])
@@ -586,6 +587,7 @@ def single_residue_convergence(coordid, xvg_data_list: List[XVGData], time, lamb
         res_fractions.append(get_protonation_timeseries(
             coordid, xvg_data, chain_mapping=chain_mapping))
 
+    list_residues = [r for r in list_residues if len(r) > 0]
     min_length = min(map(len, res_fractions))
 
     total_protarray = np.vstack(
@@ -603,12 +605,13 @@ def single_residue_convergence(coordid, xvg_data_list: List[XVGData], time, lamb
     xticks = np.arange(0, length, length/3)
     xticks = np.round(xticks/10000)*10000
     xticks = np.concatenate((xticks, [length]))
+    title = f"Convergence {display_name}{display_id}"
 
     plt.xticks(xticks.astype(int), (xticks/1000).astype(int))
     plt.ylim(0, 1.1)
     plt.ylabel("Protonation fraction")
     plt.xlabel("Time (ns)")
     plt.legend()
-    title = f"Convergence {display_name}{display_id}"
     plt.title(title)
+
     return plt

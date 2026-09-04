@@ -147,7 +147,10 @@ def get_replica_fractions(coord_id: int, xvg_data_list: List[XVGData], chain_map
         try:
             array_xvg = xvg_data[coord_id]
         except KeyError:
-            array_xvg = xvg_data[chain_mapping[coord_id]]
+            try:
+                array_xvg = xvg_data[chain_mapping[coord_id]]
+            except KeyError:
+                continue
 
         if array_xvg.size > 0:
             prot_frac, deprot_frac = calculate_fractions(array_xvg)
@@ -179,12 +182,17 @@ def get_protonation_timeseries(coord_id: int, xvg_data: XVGData, chain_mapping={
     """
     Computes the protonation fraction time series for the given coord_id.
     """
-    # Read the XVG data
+
     try:
         array_xvg = xvg_data[coord_id]
     except KeyError:
-        # If the coordinate is missing in this replica, return an empty array
-        array_xvg = xvg_data[chain_mapping[coord_id]]
+        try:
+            array_xvg = xvg_data[chain_mapping[coord_id]]
+        except KeyError:
+            # Coordinate absent here and with no cross-chain equivalent
+            # (residue present in one chain only): no data to contribute.
+            return np.array([])
+        
     # Identify protonated and deprotonated states
     prot = array_xvg[:, 1] < 0.2
     deprot = array_xvg[:, 1] > 0.8

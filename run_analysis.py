@@ -64,8 +64,51 @@ def main(args):
     if CHAINS is not None:
         lambda_ref_chains = lambda_ref.groupby('chain')
         # This should be adapted case by case, depending on the chain names in the lambda reference and the desired mapping
-        mapping = dict(
-            zip(lambda_ref_chains.groups[CHAINS[0]]+1, lambda_ref_chains.groups[CHAINS[1]]+1))
+        coords_ref = lambda_ref_chains.groups[CHAINS[0]]+1
+        coords_map = lambda_ref_chains.groups[CHAINS[1]]+1
+        mapping = dict(zip(coords_ref, coords_map))
+
+        # Cheap sanity check on the pairing above: zip() aligns the two chains
+        # by position, which is only meaningful if paired rows describe the
+        # same residue. Fail here rather than silently averaging different
+        # residues together, or crashing later inside the plotting routines.
+        resid_offset = None
+        for cid_ref, cid_map in mapping.items():
+            row_ref = lambda_ref.iloc[cid_ref-1]
+            row_map = lambda_ref.iloc[cid_map-1]
+
+            if row_ref['resname'] != row_map['resname']:
+                raise ValueError(
+                    f"Chain mapping mismatch: coord {cid_ref} is "
+                    f"{row_ref['resname']}{row_ref['resid']} (chain {row_ref['chain']}) "
+                    f"but is paired with coord {cid_map}, "
+                    f"{row_map['resname']}{row_map['resid']} (chain {row_map['chain']}). "
+                    f"Chains {CHAINS[0]} and {CHAINS[1]} are not aligned "
+                    f"position-by-position; check lambdareference.dat.")
+ 
+            offset = int(row_map['resid']) - int(row_ref['resid'])
+            if resid_offset is None:
+                resid_offset = offset
+            elif offset != resid_offset:
+                raise ValueError(
+                    f"Chain mapping mismatch: coord {cid_ref} -> {cid_map} has a "
+                    f"resid offset of {offset}, but the first pair had "
+                    f"{resid_offset}. An extra or missing titratable residue in "
+                    f"the middle of a chain shifts every later pairing; "
+                    f"check lambdareference.dat.")
+
+        # Chains of unequal length: zip() drops the trailing coordinates of the
+        # longer chain. Those residues are analysed on chain CHAINS[0] alone.
+        unpaired = [cid for cid in coords_ref if cid not in mapping]
+        if unpaired:
+            print(f"Warning: {len(unpaired)} coordinate(s) of chain {CHAINS[0]} "
+                  f"have no equivalent in chain {CHAINS[1]}: " +
+                  ", ".join(f"{lambda_ref.iloc[cid-1]['resname']}"
+                            f"{lambda_ref.iloc[cid-1]['resid']} (coord {cid})"
+                            for cid in unpaired) +
+                  f". These are averaged over chain {CHAINS[0]} only, so they "
+                  f"rest on half as many samples as the paired residues.",
+                  flush=True)
 
         coordids_chain = {}
         for chain in CHAINS:
